@@ -26,25 +26,6 @@ export default function PainelPage() {
   const [saving, setSaving]     = useState(null)
   const email                   = localStorage.getItem('email')
 
-  useEffect(() => { carregarAg() }, [])
-  useEffect(() => { if (tab === 'horarios') carregarHorarios() }, [tab])
-
-  async function carregarAg() {
-    setLoading(true)
-    try { setAg(await getAgendamentos()) }
-    catch { toast.error('Erro ao carregar agendamentos') }
-    finally { setLoading(false) }
-  }
-
-  async function carregarHorarios() {
-    try {
-      const data = await getHorarios()
-      const map = {}
-      data.forEach(c => { map[c.dia_semana] = c.horarios })
-      setConfigs(map)
-    } catch { toast.error('Erro ao carregar horários') }
-  }
-
   async function cancelar(id) {
     if (!confirm('Cancelar este agendamento?')) return
     try {
@@ -69,6 +50,47 @@ export default function PainelPage() {
     } catch { toast.error('Erro ao salvar') }
     finally { setSaving(null) }
   }
+
+  useEffect(() => {
+    let cancelado = false
+
+    async function carregarAgendamentos() {
+      try {
+        const data = await getAgendamentos()
+        if (!cancelado) setAg(data)
+      } catch {
+        if (!cancelado) toast.error('Erro ao carregar agendamentos')
+      } finally {
+        if (!cancelado) setLoading(false)
+      }
+    }
+
+    carregarAgendamentos()
+
+    return () => { cancelado = true }
+  }, [])
+
+  useEffect(() => {
+    if (tab !== 'horarios') return
+
+    let cancelado = false
+
+    async function carregarHorarios() {
+      try {
+        const data = await getHorarios()
+        if (cancelado) return
+        const map = {}
+        data.forEach(c => { map[c.dia_semana] = c.horarios })
+        setConfigs(map)
+      } catch {
+        if (!cancelado) toast.error('Erro ao carregar horários')
+      }
+    }
+
+    carregarHorarios()
+
+    return () => { cancelado = true }
+  }, [tab])
 
   const card     = { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 14, padding: '1.25rem' }
   const tabStyle = (active) => ({ padding: '7px 18px', fontSize: 13, border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', background: active ? '#D4A853' : 'none', color: active ? '#111' : '#888', fontWeight: active ? 500 : 400 })

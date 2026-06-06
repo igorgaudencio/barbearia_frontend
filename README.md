@@ -1,16 +1,83 @@
-# React + Vite
+# Barbearia Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação frontend em React + Vite.
 
-Currently, two official plugins are available:
+## Rodando com Docker
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Pré-requisitos:
 
-## React Compiler
+- Docker
+- Docker Compose
+- Backend da aplicação rodando na máquina host na porta `3000`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Para subir a versão de produção, servida pelo Nginx:
 
-## Expanding the ESLint configuration
+```bash
+docker compose up --build
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Acesse:
+
+```text
+http://localhost:8080
+```
+
+Por padrão, as chamadas para `/api` são encaminhadas para:
+
+```text
+http://host.docker.internal:3000
+```
+
+Se o backend estiver em outro endereço, altere a variável `BACKEND_URL` no `docker-compose.yml`:
+
+```yaml
+environment:
+  BACKEND_URL: http://host.docker.internal:3000
+```
+
+## Rodando em modo desenvolvimento
+
+Para subir o Vite com hot reload dentro do container:
+
+```bash
+docker compose --profile dev up frontend-dev --build
+```
+
+Acesse:
+
+```text
+http://localhost:5173
+```
+
+No modo desenvolvimento, o proxy da API usa `VITE_API_PROXY_TARGET`. Para mudar o backend, ajuste no `docker-compose.yml`:
+
+```yaml
+environment:
+  VITE_API_PROXY_TARGET: http://host.docker.internal:3000
+```
+
+## Comandos locais
+
+Instale as dependências:
+
+```bash
+npm ci
+```
+
+Rode em desenvolvimento:
+
+```bash
+npm run dev
+```
+
+Gere o build de produção:
+
+```bash
+npm run build
+```
+
+Rode o lint:
+
+```bash
+npm run lint
+```
