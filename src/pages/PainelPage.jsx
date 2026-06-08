@@ -125,6 +125,17 @@ export default function PainelPage() {
   const card     = { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 14, padding: '1.25rem' }
   const input    = { background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: '#f0ede6', outline: 'none', fontFamily: 'inherit' }
   const tabStyle = (active) => ({ padding: '7px 16px', fontSize: 13, border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', background: active ? '#D4A853' : 'none', color: active ? '#111' : '#888', fontWeight: active ? 500 : 400 })
+  const appointmentGrid = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+    gap: 12,
+    alignItems: 'center'
+  }
+  const appointmentCell = {
+    minWidth: 0,
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word'
+  }
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem' }}>
@@ -148,26 +159,30 @@ export default function PainelPage() {
             : agendamentos.length === 0
             ? <p style={{ color: '#555', textAlign: 'center', padding: '2rem' }}>Nenhum agendamento ainda</p>
             : agendamentos.map(a => (
-              <div key={a._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #2a2a2a', flexWrap: 'wrap', gap: 8 }}>
-                <div>
+              <div key={a._id} style={{ ...appointmentGrid, padding: '14px 0', borderBottom: '1px solid #2a2a2a' }}>
+                <div style={appointmentCell}>
                   <p style={{ fontWeight: 500, marginBottom: 2 }}>{a.nome}</p>
                   <p style={{ fontSize: 13, color: '#888' }}>{a.email}</p>
                 </div>
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ ...appointmentCell, textAlign: 'center' }}>
                   <p style={{ fontSize: 13, color: '#888' }}>{a.servico_nome}</p>
                   <p style={{ fontSize: 13, color: '#D4A853' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
                 </div>
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ ...appointmentCell, textAlign: 'center' }}>
                   <p style={{ fontSize: 13, color: '#888' }}>{formatarDataAgendamento(a.data)}</p>
                   <p style={{ color: '#D4A853', fontWeight: 500 }}>{a.horario}</p>
                 </div>
-                <span style={{ fontSize: 12, background: '#162116', color: '#5a9e5a', border: '1px solid #2a4a2a', padding: '3px 10px', borderRadius: 999 }}>
-                  {a.status}
-                </span>
-                <button onClick={() => cancelar(a._id)}
-                  style={{ padding: '6px 14px', fontSize: 12, border: '1px solid #3a1f1f', background: 'none', color: '#8b4a4a', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  Cancelar
-                </button>
+                <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 12, background: '#162116', color: '#5a9e5a', border: '1px solid #2a4a2a', padding: '3px 10px', borderRadius: 999, textAlign: 'center' }}>
+                    {a.status}
+                  </span>
+                </div>
+                <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
+                  <button onClick={() => cancelar(a._id)}
+                    style={{ padding: '6px 14px', fontSize: 12, border: '1px solid #3a1f1f', background: 'none', color: '#8b4a4a', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'normal' }}>
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ))
           }
