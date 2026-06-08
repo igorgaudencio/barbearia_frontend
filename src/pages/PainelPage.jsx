@@ -82,6 +82,18 @@ export default function PainelPage() {
     })
   }
 
+  function toggleTodosHorarios(dia) {
+    setConfigs(prev => {
+      const atual = prev[dia] || []
+      const todosSelecionados = atual.length === TODOS_HORARIOS.length
+
+      return {
+        ...prev,
+        [dia]: todosSelecionados ? [] : [...TODOS_HORARIOS]
+      }
+    })
+  }
+
   async function salvar(dia) {
     setSaving(dia)
     try {
@@ -207,25 +219,41 @@ export default function PainelPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
             {DIAS.map(({ key, label }) => (
               <div key={key} style={card}>
+                {(() => {
+                  const horariosSelecionados = configs[key] || []
+                  const todosSelecionados = horariosSelecionados.length === TODOS_HORARIOS.length
+
+                  return (
+                    <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <span style={{ fontWeight: 500, fontSize: 15 }}>{label}</span>
-                  <span style={{ fontSize: 12, color: '#D4A853' }}>{(configs[key] || []).length} horário(s)</span>
+                  <span style={{ fontSize: 12, color: '#D4A853' }}>{horariosSelecionados.length} horário(s)</span>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => toggleTodosHorarios(key)}
+                  style={{ width: '100%', marginBottom: '0.75rem', padding: '8px 10px', background: 'none', color: '#D4A853', border: '1px solid #5c4820', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  {todosSelecionados ? 'Desmarcar todos' : 'Marcar todos'}
+                </button>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: '1rem' }}>
                   {TODOS_HORARIOS.map(h => {
-                    const active = (configs[key] || []).includes(h)
+                    const active = horariosSelecionados.includes(h)
                     return (
-                      <button key={h} onClick={() => toggleHorario(key, h)}
+                      <button key={h} type="button" onClick={() => toggleHorario(key, h)}
                         style={{ padding: '7px 4px', fontSize: 12, borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid ' + (active ? '#D4A853' : '#2a2a2a'), background: active ? '#1a1508' : '#161616', color: active ? '#D4A853' : '#888' }}>
                         {h}
                       </button>
                     )
                   })}
                 </div>
-                <button onClick={() => salvar(key)} disabled={saving === key}
+                <button type="button" onClick={() => salvar(key)} disabled={saving === key}
                   style={{ width: '100%', padding: 9, background: '#D4A853', color: '#111', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving === key ? 0.5 : 1 }}>
                   {saving === key ? 'Salvando...' : 'Salvar'}
                 </button>
+                    </>
+                  )
+                })()}
               </div>
             ))}
           </div>
