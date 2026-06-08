@@ -2,12 +2,12 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 const linkStyle = (active) => ({
   padding: '6px 16px', fontSize: 13, borderRadius: 8, textDecoration: 'none',
-  border: '1px solid ' + (active ? '#ffffff' : 'transparent'),
-  background: active ? '#f8f8f8' : 'none',
-  color: active ? '#D4A853' : '#888'
+  border: '1px solid ' + (active ? 'var(--border-strong)' : 'transparent'),
+  background: active ? 'var(--bg-card)' : 'none',
+  color: active ? 'var(--gold)' : 'var(--text-secondary)'
 })
 
-export default function Layout() {
+export default function Layout({ theme, toggleTheme }) {
   const navigate = useNavigate()
   const token = localStorage.getItem('token')
 
@@ -19,16 +19,25 @@ export default function Layout() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header style={{ background: '#0a0a0a', borderBottom: '1px solid #ffffff', padding: '0 2rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
+      <header style={{ background: 'var(--bg-hero)', borderBottom: '1px solid var(--border-strong)', padding: '0 2rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: '#D4A853', fontSize: 22 }}>✂</span>
+          <span style={{ color: 'var(--gold)', fontSize: 22 }}>✂</span>
           <div>
-            <div style={{ fontFamily: 'serif', fontSize: 18, color: '#f0ede6' }}>Barbearia Coquilho</div>
-            <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Est. 2026</div>
+            <div style={{ fontFamily: 'serif', fontSize: 18, color: 'var(--text-primary)' }}>Barbearia Coquilho</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Est. 2026</div>
           </div>
         </div>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={`Ativar modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
+            title={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            style={{ width: 38, height: 38, display: 'grid', placeItems: 'center', fontSize: 18, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer' }}
+          >
+            <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
+          </button>
           <NavLink to="/" end style={({ isActive }) => linkStyle(isActive)}>
             Agendamento
           </NavLink>
@@ -38,7 +47,7 @@ export default function Layout() {
               <NavLink to="/painel" style={({ isActive }) => linkStyle(isActive)}>
                 Painel
               </NavLink>
-              <button onClick={logout} style={{ padding: '6px 16px', fontSize: 13, borderRadius: 8, border: '1px solid #3a1f1f', background: 'none', color: '#8b4a4a', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={logout} style={{ padding: '6px 16px', fontSize: 13, borderRadius: 8, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
                 Sair
               </button>
             </>
@@ -54,8 +63,8 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer style={{ background: '#0a0a0a', borderTop: '1px solid #d14848', textAlign: 'center', padding: '1.25rem', fontSize: 12, color: '#555' }}>
-        <span style={{ color: '#D4A853' }}>Barbearia Coquilho</span> · Rua dos Caminhões, 67 · (84) 98747-9792
+      <footer style={{ background: 'var(--bg-hero)', borderTop: '1px solid var(--border-soft)', textAlign: 'center', padding: '1.25rem', fontSize: 12, color: 'var(--text-muted)' }}>
+        <span style={{ color: 'var(--gold)' }}>Barbearia Coquilho</span> · Rua dos Caminhões, 67 · (84) 98747-9792
       </footer>
     </div>
   )

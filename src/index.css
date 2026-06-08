@@ -3,15 +3,52 @@
 :root {
   --gold: #D4A853;
   --bg: #0e0e0e;
+  --bg-hero: #0a0a0a;
   --bg-card: #1c1c1c;
   --bg-surface: #161616;
   --bg-hover: #222;
+  --bg-accent-soft: #1a1508;
   --text-primary: #f0ede6;
   --text-secondary: #888880;
   --text-muted: #555550;
+  --text-inverse: #111111;
   --border: #2a2a2a;
+  --border-strong: #ffffff;
+  --border-soft: #1a1a1a;
+  --danger: #8b4a4a;
+  --danger-border: #3a1f1f;
+  --success-bg: #162116;
+  --success-text: #5a9e5a;
+  --success-border: #2a4a2a;
   --radius: 8px;
   --radius-lg: 14px;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f5efe6;
+  --bg-hero: #fbf7f1;
+  --bg-card: #ffffff;
+  --bg-surface: #f3ede3;
+  --bg-hover: #ece3d3;
+  --bg-accent-soft: #f8efd9;
+  --text-primary: #1f1a14;
+  --text-secondary: #6b6258;
+  --text-muted: #988f84;
+  --text-inverse: #111111;
+  --border: #d9ccb8;
+  --border-strong: #c9b99d;
+  --border-soft: #e5dac8;
+  --danger: #a04a4a;
+  --danger-border: #d7b4b4;
+  --success-bg: #edf7ee;
+  --success-text: #2f7a42;
+  --success-border: #bdd9c4;
+  color-scheme: light;
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
@@ -19,4 +56,21 @@ body {
   color: var(--text-primary);
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+a, button, input {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+button, input {
+  font: inherit;
+}
+
+input::placeholder {
+  color: var(--text-muted);
+}
+
+#root {
+  min-height: 100vh;
 }

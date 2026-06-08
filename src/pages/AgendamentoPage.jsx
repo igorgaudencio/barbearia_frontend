@@ -57,42 +57,42 @@ export default function AgendamentoPage() {
   }
 
   const servicoSelecionado = servicos.find(s => s._id === servicoId)
-  const input = { width: '100%', background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: '10px 12px', fontSize: 14, color: '#f0ede6', outline: 'none', fontFamily: 'inherit' }
-  const label = { display: 'block', fontSize: 11, color: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
-  const card  = { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 14, padding: '1.75rem' }
+  const input = { width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: 14, color: 'var(--text-primary)', outline: 'none' }
+  const label = { display: 'block', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
+  const card  = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.75rem' }
 
   return (
     <div>
-      <div style={{ background: '#0a0a0a', borderBottom: '1px solid #1a1a1a', textAlign: 'center', padding: '3rem 2rem' }}>
-        <p style={{ fontSize: 11, letterSpacing: '0.2em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 12 }}>Agende seu horário</p>
+      <div style={{ background: 'var(--bg-hero)', borderBottom: '1px solid var(--border-soft)', textAlign: 'center', padding: '3rem 2rem' }}>
+        <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: 12 }}>Agende seu horário</p>
         <h1 style={{ fontFamily: 'serif', fontSize: 36, fontWeight: 500, marginBottom: 10 }}>Seu estilo, na hora certa</h1>
-        <p style={{ color: '#888', fontSize: 15 }}>Escolha o serviço, dia e horário disponível</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Escolha o serviço, dia e horário disponível</p>
       </div>
 
       <div style={{ maxWidth: 520, margin: '2rem auto', padding: '0 1rem' }}>
         {sucesso ? (
-          <div style={{ ...card, textAlign: 'center', padding: '2.5rem', border: '1px solid #2e2518' }}>
-            <div style={{ fontSize: 48, color: '#D4A853', marginBottom: 12 }}>✓</div>
+          <div style={{ ...card, textAlign: 'center', padding: '2.5rem', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 48, color: 'var(--gold)', marginBottom: 12 }}>✓</div>
             <h2 style={{ fontFamily: 'serif', fontSize: 22, marginBottom: 8 }}>Agendado com sucesso!</h2>
-            <p style={{ color: '#888', fontSize: 14 }}>Confirmação enviada para <strong style={{ color: '#D4A853' }}>{email}</strong></p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Confirmação enviada para <strong style={{ color: 'var(--gold)' }}>{email}</strong></p>
           </div>
         ) : (
           <form style={card} onSubmit={handleSubmit}>
             <h2 style={{ fontFamily: 'serif', fontSize: 20, marginBottom: 4 }}>Novo agendamento</h2>
-            <p style={{ fontSize: 13, color: '#888', marginBottom: '1.5rem' }}>Preencha os dados para confirmar</p>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Preencha os dados para confirmar</p>
 
             {/* Serviços */}
             <div style={{ marginBottom: '1.25rem' }}>
               <label style={label}>Serviço</label>
               {servicos.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#555', padding: '10px 0' }}>Nenhum serviço disponível no momento</p>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '10px 0' }}>Nenhum serviço disponível no momento</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {servicos.map(s => (
                     <button key={s._id} type="button" onClick={() => setServico(s._id)}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid ' + (servicoId === s._id ? '#D4A853' : '#2a2a2a'), background: servicoId === s._id ? '#1a1508' : '#161616' }}>
-                      <span style={{ fontSize: 14, color: servicoId === s._id ? '#D4A853' : '#f0ede6' }}>{s.nome}</span>
-                      <span style={{ fontSize: 14, color: '#D4A853', fontWeight: 500 }}>
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (servicoId === s._id ? 'var(--gold)' : 'var(--border)'), background: servicoId === s._id ? 'var(--bg-accent-soft)' : 'var(--bg-surface)' }}>
+                      <span style={{ fontSize: 14, color: servicoId === s._id ? 'var(--gold)' : 'var(--text-primary)' }}>{s.nome}</span>
+                      <span style={{ fontSize: 14, color: 'var(--gold)', fontWeight: 500 }}>
                         R$ {Number(s.preco).toFixed(2)}
                       </span>
                     </button>
@@ -121,22 +121,22 @@ export default function AgendamentoPage() {
             {/* Horários */}
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={label}>Horário disponível</label>
-              {!data && <p style={{ fontSize: 13, color: '#555', padding: '10px 0' }}>← Selecione uma data primeiro</p>}
+              {!data && <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '10px 0' }}>← Selecione uma data primeiro</p>}
               {loadingSlots && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} style={{ height: 38, background: '#161616', borderRadius: 8, opacity: 0.5 }} />
+                    <div key={i} style={{ height: 38, background: 'var(--bg-surface)', borderRadius: 8, opacity: 0.5 }} />
                   ))}
                 </div>
               )}
               {slots && !loadingSlots && slots.disponiveis?.length === 0 && (
-                <p style={{ fontSize: 13, color: '#555', padding: '10px 0' }}>Nenhum horário disponível neste dia</p>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '10px 0' }}>Nenhum horário disponível neste dia</p>
               )}
               {slots && !loadingSlots && slots.disponiveis?.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   {slots.disponiveis.map(h => (
                     <button key={h} type="button" onClick={() => setHorario(h)}
-                      style={{ padding: '9px 4px', fontSize: 13, borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid ' + (horario === h ? '#D4A853' : '#2a2a2a'), background: horario === h ? '#1a1508' : '#161616', color: horario === h ? '#D4A853' : '#888' }}>
+                      style={{ padding: '9px 4px', fontSize: 13, borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (horario === h ? 'var(--gold)' : 'var(--border)'), background: horario === h ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: horario === h ? 'var(--gold)' : 'var(--text-secondary)' }}>
                       {h}
                     </button>
                   ))}
@@ -146,36 +146,36 @@ export default function AgendamentoPage() {
 
             {/* Resumo */}
             {(servicoSelecionado || data || horario || nome) && (
-              <div style={{ background: '#161616', borderRadius: 8, padding: '12px 14px', marginBottom: '1.25rem', border: '1px solid #2a2a2a' }}>
+              <div style={{ background: 'var(--bg-surface)', borderRadius: 8, padding: '12px 14px', marginBottom: '1.25rem', border: '1px solid var(--border)' }}>
                 {servicoSelecionado && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
-                    <span style={{ color: '#888' }}>Serviço</span>
-                    <span style={{ color: '#f0ede6', fontWeight: 500 }}>{servicoSelecionado.nome} — R$ {Number(servicoSelecionado.preco).toFixed(2)}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>Serviço</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{servicoSelecionado.nome} — R$ {Number(servicoSelecionado.preco).toFixed(2)}</span>
                   </div>
                 )}
                 {nome && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
-                    <span style={{ color: '#888' }}>Cliente</span>
-                    <span style={{ color: '#f0ede6', fontWeight: 500 }}>{nome}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>Cliente</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{nome}</span>
                   </div>
                 )}
                 {data && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
-                    <span style={{ color: '#888' }}>Data</span>
-                    <span style={{ color: '#f0ede6', fontWeight: 500 }}>{data}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>Data</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{data}</span>
                   </div>
                 )}
                 {horario && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
-                    <span style={{ color: '#888' }}>Horário</span>
-                    <span style={{ color: '#D4A853', fontWeight: 500 }}>{horario}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>Horário</span>
+                    <span style={{ color: 'var(--gold)', fontWeight: 500 }}>{horario}</span>
                   </div>
                 )}
               </div>
             )}
 
             <button type="submit" disabled={!servicoId || !horario || loading}
-              style={{ width: '100%', padding: 13, background: '#D4A853', color: '#111', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: (!servicoId || !horario || loading) ? 0.4 : 1 }}>
+              style={{ width: '100%', padding: 13, background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', opacity: (!servicoId || !horario || loading) ? 0.4 : 1 }}>
               {loading ? 'Confirmando...' : 'Confirmar agendamento'}
             </button>
           </form>

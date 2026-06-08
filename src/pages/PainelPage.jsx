@@ -122,9 +122,9 @@ export default function PainelPage() {
     } catch { toast.error('Erro ao remover') }
   }
 
-  const card     = { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 14, padding: '1.25rem' }
-  const input    = { background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: '#f0ede6', outline: 'none', fontFamily: 'inherit' }
-  const tabStyle = (active) => ({ padding: '7px 16px', fontSize: 13, border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', background: active ? '#D4A853' : 'none', color: active ? '#111' : '#888', fontWeight: active ? 500 : 400 })
+  const card     = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.25rem' }
+  const input    = { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: 'var(--text-primary)', outline: 'none' }
+  const tabStyle = (active) => ({ padding: '7px 16px', fontSize: 13, border: 'none', borderRadius: 6, cursor: 'pointer', background: active ? 'var(--gold)' : 'none', color: active ? 'var(--text-inverse)' : 'var(--text-secondary)', fontWeight: active ? 500 : 400 })
   const appointmentGrid = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
@@ -142,9 +142,9 @@ export default function PainelPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontFamily: 'serif', fontSize: 26, marginBottom: 4 }}>Painel do Barbeiro</h1>
-          <p style={{ fontSize: 14, color: '#888' }}>{email}</p>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{email}</p>
         </div>
-        <div style={{ display: 'flex', gap: 6, background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: 4 }}>
+        <div style={{ display: 'flex', gap: 6, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 4 }}>
           <button style={tabStyle(tab === 'agendamentos')} onClick={() => setTab('agendamentos')}>Agendamentos</button>
           <button style={tabStyle(tab === 'servicos')}     onClick={() => setTab('servicos')}>Serviços</button>
           <button style={tabStyle(tab === 'horarios')}     onClick={() => setTab('horarios')}>Horários</button>
@@ -155,31 +155,31 @@ export default function PainelPage() {
       {tab === 'agendamentos' && (
         <div style={card}>
           {loading
-            ? <p style={{ color: '#555', textAlign: 'center', padding: '2rem' }}>Carregando...</p>
+            ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Carregando...</p>
             : agendamentos.length === 0
-            ? <p style={{ color: '#555', textAlign: 'center', padding: '2rem' }}>Nenhum agendamento ainda</p>
+            ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Nenhum agendamento ainda</p>
             : agendamentos.map(a => (
-              <div key={a._id} style={{ ...appointmentGrid, padding: '14px 0', borderBottom: '1px solid #2a2a2a' }}>
+              <div key={a._id} style={{ ...appointmentGrid, padding: '14px 0', borderBottom: '1px solid var(--border)' }}>
                 <div style={appointmentCell}>
                   <p style={{ fontWeight: 500, marginBottom: 2 }}>{a.nome}</p>
-                  <p style={{ fontSize: 13, color: '#888' }}>{a.email}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{a.email}</p>
                 </div>
                 <div style={{ ...appointmentCell, textAlign: 'center' }}>
-                  <p style={{ fontSize: 13, color: '#888' }}>{a.servico_nome}</p>
-                  <p style={{ fontSize: 13, color: '#D4A853' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{a.servico_nome}</p>
+                  <p style={{ fontSize: 13, color: 'var(--gold)' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
                 </div>
                 <div style={{ ...appointmentCell, textAlign: 'center' }}>
-                  <p style={{ fontSize: 13, color: '#888' }}>{formatarDataAgendamento(a.data)}</p>
-                  <p style={{ color: '#D4A853', fontWeight: 500 }}>{a.horario}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{formatarDataAgendamento(a.data)}</p>
+                  <p style={{ color: 'var(--gold)', fontWeight: 500 }}>{a.horario}</p>
                 </div>
                 <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 12, background: '#162116', color: '#5a9e5a', border: '1px solid #2a4a2a', padding: '3px 10px', borderRadius: 999, textAlign: 'center' }}>
+                  <span style={{ fontSize: 12, background: 'var(--success-bg)', color: 'var(--success-text)', border: '1px solid var(--success-border)', padding: '3px 10px', borderRadius: 999, textAlign: 'center' }}>
                     {a.status}
                   </span>
                 </div>
                 <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
                   <button onClick={() => cancelar(a._id)}
-                    style={{ padding: '6px 14px', fontSize: 12, border: '1px solid #3a1f1f', background: 'none', color: '#8b4a4a', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'normal' }}>
+                    style={{ padding: '6px 14px', fontSize: 12, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: 'pointer', whiteSpace: 'normal' }}>
                     Cancelar
                   </button>
                 </div>
@@ -194,29 +194,29 @@ export default function PainelPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <form onSubmit={handleCriarServico} style={{ ...card, display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div style={{ flex: 2, minWidth: 180 }}>
-              <label style={{ display: 'block', fontSize: 11, color: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Nome do serviço</label>
+              <label style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Nome do serviço</label>
               <input style={{ ...input, width: '100%' }} type="text" placeholder="Ex: Corte simples" value={novoNome} onChange={e => setNome(e.target.value)} required />
             </div>
             <div style={{ flex: 1, minWidth: 120 }}>
-              <label style={{ display: 'block', fontSize: 11, color: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Preço (R$)</label>
+              <label style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Preço (R$)</label>
               <input style={{ ...input, width: '100%' }} type="number" min="0" step="0.01" placeholder="35.00" value={novoPreco} onChange={e => setPreco(e.target.value)} required />
             </div>
             <button type="submit"
-              style={{ padding: '9px 20px', background: '#D4A853', color: '#111', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+              style={{ padding: '9px 20px', background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               + Adicionar
             </button>
           </form>
 
           <div style={card}>
             {servicos.length === 0
-              ? <p style={{ color: '#555', textAlign: 'center', padding: '1.5rem' }}>Nenhum serviço cadastrado ainda</p>
+              ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem' }}>Nenhum serviço cadastrado ainda</p>
               : servicos.map(s => (
-                <div key={s._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #2a2a2a' }}>
-                  <span style={{ fontSize: 15, color: '#f0ede6' }}>{s.nome}</span>
+                <div key={s._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 15, color: 'var(--text-primary)' }}>{s.nome}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <span style={{ color: '#D4A853', fontWeight: 500 }}>R$ {Number(s.preco).toFixed(2)}</span>
+                    <span style={{ color: 'var(--gold)', fontWeight: 500 }}>R$ {Number(s.preco).toFixed(2)}</span>
                     <button onClick={() => handleDeletarServico(s._id)}
-                      style={{ padding: '5px 12px', fontSize: 12, border: '1px solid #3a1f1f', background: 'none', color: '#8b4a4a', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ padding: '5px 12px', fontSize: 12, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: 'pointer' }}>
                       Remover
                     </button>
                   </div>
@@ -230,7 +230,7 @@ export default function PainelPage() {
       {/* HORÁRIOS */}
       {tab === 'horarios' && (
         <div>
-          <p style={{ fontSize: 13, color: '#555', marginBottom: '1.5rem' }}>Selecione os horários que você atende em cada dia</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Selecione os horários que você atende em cada dia</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
             {DIAS.map(({ key, label }) => (
               <div key={key} style={card}>
@@ -242,12 +242,12 @@ export default function PainelPage() {
                     <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <span style={{ fontWeight: 500, fontSize: 15 }}>{label}</span>
-                  <span style={{ fontSize: 12, color: '#D4A853' }}>{horariosSelecionados.length} horário(s)</span>
+                  <span style={{ fontSize: 12, color: 'var(--gold)' }}>{horariosSelecionados.length} horário(s)</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => toggleTodosHorarios(key)}
-                  style={{ width: '100%', marginBottom: '0.75rem', padding: '8px 10px', background: 'none', color: '#D4A853', border: '1px solid #5c4820', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ width: '100%', marginBottom: '0.75rem', padding: '8px 10px', background: 'none', color: 'var(--gold)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                 >
                   {todosSelecionados ? 'Desmarcar todos' : 'Marcar todos'}
                 </button>
@@ -256,14 +256,14 @@ export default function PainelPage() {
                     const active = horariosSelecionados.includes(h)
                     return (
                       <button key={h} type="button" onClick={() => toggleHorario(key, h)}
-                        style={{ padding: '7px 4px', fontSize: 12, borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid ' + (active ? '#D4A853' : '#2a2a2a'), background: active ? '#1a1508' : '#161616', color: active ? '#D4A853' : '#888' }}>
+                        style={{ padding: '7px 4px', fontSize: 12, borderRadius: 6, cursor: 'pointer', border: '1px solid ' + (active ? 'var(--gold)' : 'var(--border)'), background: active ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: active ? 'var(--gold)' : 'var(--text-secondary)' }}>
                         {h}
                       </button>
                     )
                   })}
                 </div>
                 <button type="button" onClick={() => salvar(key)} disabled={saving === key}
-                  style={{ width: '100%', padding: 9, background: '#D4A853', color: '#111', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving === key ? 0.5 : 1 }}>
+                  style={{ width: '100%', padding: 9, background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: 'pointer', opacity: saving === key ? 0.5 : 1 }}>
                   {saving === key ? 'Salvando...' : 'Salvar'}
                 </button>
                     </>

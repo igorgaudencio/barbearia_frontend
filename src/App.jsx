@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import AgendamentoPage from './pages/AgendamentoPage'
@@ -11,13 +12,38 @@ function RotaProtegida({ children }) {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme
+
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  })
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  function toggleTheme() {
+    setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')
+  }
+
   return (
     <BrowserRouter>
-      <Toaster position="bottom-right" reverseOrder={true} toastOptions={{
-        style: { background: '#1c1c1c', color: '#f0ede6', border: '1px solid #D4A853', fontSize: '14px' }
-      }} />
+      <Toaster
+        position="bottom-right"
+        reverseOrder={true}
+        toastOptions={{
+          style: {
+            background: theme === 'dark' ? '#1c1c1c' : '#ffffff',
+            color: theme === 'dark' ? '#f0ede6' : '#1f1a14',
+            border: `1px solid ${theme === 'dark' ? '#D4A853' : '#d9ccb8'}`,
+            fontSize: '14px'
+          }
+        }}
+      />
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Layout theme={theme} toggleTheme={toggleTheme} />}>
           <Route index element={<AgendamentoPage />} />
           <Route path="barbeiro" element={<BarbeiroPage />} />
           <Route path="painel" element={<RotaProtegida><PainelPage /></RotaProtegida>} />
