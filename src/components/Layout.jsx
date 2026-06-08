@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 const linkStyle = (active) => ({
-  padding: '6px 16px', fontSize: 13, borderRadius: 8, textDecoration: 'none',
+  padding: '8px 18px', fontSize: 15, fontWeight: 600, borderRadius: 8, textDecoration: 'none',
   border: '1px solid ' + (active ? 'var(--border-strong)' : 'transparent'),
   background: active ? 'var(--bg-card)' : 'none',
   color: active ? 'var(--gold)' : 'var(--text-secondary)'
@@ -19,12 +19,12 @@ export default function Layout({ theme, toggleTheme }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header style={{ background: 'var(--bg-hero)', borderBottom: '1px solid var(--border-strong)', padding: '0 2rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
+      <header style={{ background: 'var(--bg-hero)', borderBottom: '1px solid var(--border-strong)', padding: '0 2rem', minHeight: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ color: 'var(--gold)', fontSize: 22 }}>✂</span>
           <div>
-            <div style={{ fontFamily: 'serif', fontSize: 18, color: 'var(--text-primary)' }}>Barbearia Coquilho</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Est. 2026</div>
+            <div style={{ fontFamily: 'serif', fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>Barbearia Coquilho</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Est. 2026</div>
           </div>
         </div>
 
@@ -34,7 +34,7 @@ export default function Layout({ theme, toggleTheme }) {
             onClick={toggleTheme}
             aria-label={`Ativar modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
             title={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
-            style={{ width: 38, height: 38, display: 'grid', placeItems: 'center', fontSize: 18, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer' }}
+            style={{ width: 42, height: 42, display: 'grid', placeItems: 'center', fontSize: 20, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer' }}
           >
             <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
           </button>
@@ -47,7 +47,7 @@ export default function Layout({ theme, toggleTheme }) {
               <NavLink to="/painel" style={({ isActive }) => linkStyle(isActive)}>
                 Painel
               </NavLink>
-              <button onClick={logout} style={{ padding: '6px 16px', fontSize: 13, borderRadius: 8, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
+              <button onClick={logout} style={{ padding: '8px 18px', fontSize: 15, fontWeight: 600, borderRadius: 8, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
                 Sair
               </button>
             </>
@@ -63,7 +63,7 @@ export default function Layout({ theme, toggleTheme }) {
         <Outlet />
       </main>
 
-      <footer style={{ background: 'var(--bg-hero)', borderTop: '1px solid var(--border-soft)', textAlign: 'center', padding: '1.25rem', fontSize: 12, color: 'var(--text-muted)' }}>
+      <footer style={{ background: 'var(--bg-hero)', borderTop: '1px solid var(--border-soft)', textAlign: 'center', padding: '1.25rem', fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}>
         <span style={{ color: 'var(--gold)' }}>Barbearia Coquilho</span> · Rua dos Caminhões, 67 · (84) 98747-9792
       </footer>
     </div>

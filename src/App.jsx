@@ -38,7 +38,8 @@ export default function App() {
             background: theme === 'dark' ? '#1c1c1c' : '#ffffff',
             color: theme === 'dark' ? '#f0ede6' : '#1f1a14',
             border: `1px solid ${theme === 'dark' ? '#D4A853' : '#d9ccb8'}`,
-            fontSize: '14px'
+            fontSize: '15px',
+            fontWeight: 600
           }
         }}
       />

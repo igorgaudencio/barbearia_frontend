@@ -33,17 +33,17 @@ export default function BarbeiroPage() {
     }
   }
 
-  const input = { width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: 14, color: 'var(--text-primary)', outline: 'none' }
-  const label = { display: 'block', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
+  const input = { width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', outline: 'none' }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 64px)', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
+    <div style={{ minHeight: 'calc(100vh - 72px)', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ fontSize: 36, color: 'var(--gold)', marginBottom: 10 }}>✂</div>
-          <h1 style={{ fontFamily: 'serif', fontSize: 26, marginBottom: 6 }}>Área do Barbeiro</h1>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+          <h1 style={{ fontFamily: 'serif', fontSize: 30, fontWeight: 700, marginBottom: 6 }}>Área do Barbeiro</h1>
+          <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-secondary)' }}>
             {modo === 'login' ? 'Entre com suas credenciais para acessar o painel' : 'Crie sua conta para acessar o painel'}
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function BarbeiroPage() {
         <div style={{ display: 'flex', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 4, marginBottom: '1.5rem' }}>
           {[['login', 'Entrar'], ['cadastro', 'Criar conta']].map(([m, label]) => (
             <button key={m} type="button" onClick={() => setModo(m)}
-              style={{ flex: 1, padding: '8px', fontSize: 13, border: 'none', borderRadius: 7, cursor: 'pointer', background: modo === m ? 'var(--gold)' : 'none', color: modo === m ? 'var(--text-inverse)' : 'var(--text-secondary)', fontWeight: modo === m ? 500 : 400, transition: 'all 0.15s' }}>
+              style={{ flex: 1, padding: '10px', fontSize: 15, border: 'none', borderRadius: 7, cursor: 'pointer', background: modo === m ? 'var(--gold)' : 'none', color: modo === m ? 'var(--text-inverse)' : 'var(--text-secondary)', fontWeight: modo === m ? 700 : 600, transition: 'all 0.15s' }}>
               {label}
             </button>
           ))}
@@ -76,7 +76,7 @@ export default function BarbeiroPage() {
           )}
 
           <button type="submit" disabled={loading}
-            style={{ width: '100%', padding: 13, background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>
+            style={{ width: '100%', padding: 14, background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>
             {loading ? 'Aguarde...' : modo === 'login' ? 'Entrar no painel' : 'Criar conta'}
           </button>
         </form>
