@@ -35,4 +35,16 @@ export const getHorariosDisponiveis = (data) =>
 export const salvarHorarios = (dia_semana, horarios) =>
   api.post('/horarios', { dia_semana, horarios }).then(r => r.data)
 
+export const getServicos = () =>
+  api.get('/servicos').then(r => r.data)
+
+export const criarServico = (payload) =>
+  api.post('/servicos', { servico: payload }).then(r => r.data)
+
+export const atualizarServico = (id, payload) =>
+  api.put(`/servicos/${id}`, { servico: payload }).then(r => r.data)
+
+export const deletarServico = (id) =>
+  api.delete(`/servicos/${id}`).then(r => r.data)
+
 export default api

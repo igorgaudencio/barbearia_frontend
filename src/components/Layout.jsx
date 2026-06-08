@@ -2,8 +2,8 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 const linkStyle = (active) => ({
   padding: '6px 16px', fontSize: 13, borderRadius: 8, textDecoration: 'none',
-  border: '1px solid ' + (active ? '#2e2518' : 'transparent'),
-  background: active ? '#1a1508' : 'none',
+  border: '1px solid ' + (active ? '#ffffff' : 'transparent'),
+  background: active ? '#f8f8f8' : 'none',
   color: active ? '#D4A853' : '#888'
 })
 
@@ -19,12 +19,12 @@ export default function Layout() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header style={{ background: '#0a0a0a', borderBottom: '1px solid #222', padding: '0 2rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
+      <header style={{ background: '#0a0a0a', borderBottom: '1px solid #ffffff', padding: '0 2rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ color: '#D4A853', fontSize: 22 }}>✂</span>
           <div>
-            <div style={{ fontFamily: 'serif', fontSize: 18, color: '#f0ede6' }}>Barbearia Elite</div>
-            <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Est. 2018</div>
+            <div style={{ fontFamily: 'serif', fontSize: 18, color: '#f0ede6' }}>Barbearia Coquilho</div>
+            <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Est. 2026</div>
           </div>
         </div>
 
@@ -54,8 +54,8 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer style={{ background: '#0a0a0a', borderTop: '1px solid #1a1a1a', textAlign: 'center', padding: '1.25rem', fontSize: 12, color: '#555' }}>
-        <span style={{ color: '#D4A853' }}>Barbearia Elite</span> · Rua das Flores, 123 · (84) 99999-0000
+      <footer style={{ background: '#0a0a0a', borderTop: '1px solid #d14848', textAlign: 'center', padding: '1.25rem', fontSize: 12, color: '#555' }}>
+        <span style={{ color: '#D4A853' }}>Barbearia Coquilho</span> · Rua dos Caminhões, 67 · (84) 98747-9792
       </footer>
     </div>
   )

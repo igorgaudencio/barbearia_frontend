@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAgendamentos, deletarAgendamento, getHorarios, salvarHorarios } from '../services/api'
+import { getAgendamentos, deletarAgendamento, getHorarios, salvarHorarios, getServicos, criarServico, deletarServico } from '../services/api'
 import toast from 'react-hot-toast'
 
 const DIAS = [
@@ -22,12 +22,16 @@ export default function PainelPage() {
   const [tab, setTab]           = useState('agendamentos')
   const [agendamentos, setAg]   = useState([])
   const [configs, setConfigs]   = useState({})
+  const [servicos, setServicos] = useState([])
+  const [novoNome, setNome]     = useState('')
+  const [novoPreco, setPreco]   = useState('')
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(null)
   const email                   = localStorage.getItem('email')
 
   useEffect(() => { carregarAg() }, [])
   useEffect(() => { if (tab === 'horarios') carregarHorarios() }, [tab])
+  useEffect(() => { if (tab === 'servicos') carregarServicos() }, [tab])
 
   async function carregarAg() {
     setLoading(true)
@@ -43,6 +47,11 @@ export default function PainelPage() {
       data.forEach(c => { map[c.dia_semana] = c.horarios })
       setConfigs(map)
     } catch { toast.error('Erro ao carregar horários') }
+  }
+
+  async function carregarServicos() {
+    try { setServicos(await getServicos()) }
+    catch { toast.error('Erro ao carregar serviços') }
   }
 
   async function cancelar(id) {
@@ -70,8 +79,28 @@ export default function PainelPage() {
     finally { setSaving(null) }
   }
 
+  async function handleCriarServico(e) {
+    e.preventDefault()
+    try {
+      const s = await criarServico({ nome: novoNome, preco: parseFloat(novoPreco) })
+      setServicos(prev => [...prev, s])
+      setNome(''); setPreco('')
+      toast.success('Serviço cadastrado!')
+    } catch { toast.error('Erro ao cadastrar serviço') }
+  }
+
+  async function handleDeletarServico(id) {
+    if (!confirm('Remover este serviço?')) return
+    try {
+      await deletarServico(id)
+      setServicos(prev => prev.filter(s => s._id !== id))
+      toast.success('Serviço removido!')
+    } catch { toast.error('Erro ao remover') }
+  }
+
   const card     = { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 14, padding: '1.25rem' }
-  const tabStyle = (active) => ({ padding: '7px 18px', fontSize: 13, border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', background: active ? '#D4A853' : 'none', color: active ? '#111' : '#888', fontWeight: active ? 500 : 400 })
+  const input    = { background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: '9px 12px', fontSize: 14, color: '#f0ede6', outline: 'none', fontFamily: 'inherit' }
+  const tabStyle = (active) => ({ padding: '7px 16px', fontSize: 13, border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', background: active ? '#D4A853' : 'none', color: active ? '#111' : '#888', fontWeight: active ? 500 : 400 })
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem' }}>
@@ -82,10 +111,12 @@ export default function PainelPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: 4 }}>
           <button style={tabStyle(tab === 'agendamentos')} onClick={() => setTab('agendamentos')}>Agendamentos</button>
-          <button style={tabStyle(tab === 'horarios')} onClick={() => setTab('horarios')}>Meus horários</button>
+          <button style={tabStyle(tab === 'servicos')}     onClick={() => setTab('servicos')}>Serviços</button>
+          <button style={tabStyle(tab === 'horarios')}     onClick={() => setTab('horarios')}>Horários</button>
         </div>
       </div>
 
+      {/* AGENDAMENTOS */}
       {tab === 'agendamentos' && (
         <div style={card}>
           {loading
@@ -97,6 +128,10 @@ export default function PainelPage() {
                 <div>
                   <p style={{ fontWeight: 500, marginBottom: 2 }}>{a.nome}</p>
                   <p style={{ fontSize: 13, color: '#888' }}>{a.email}</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 13, color: '#888' }}>{a.servico_nome}</p>
+                  <p style={{ fontSize: 13, color: '#D4A853' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ fontSize: 13, color: '#888' }}>{a.data}</p>
@@ -115,11 +150,48 @@ export default function PainelPage() {
         </div>
       )}
 
+      {/* SERVIÇOS */}
+      {tab === 'servicos' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <form onSubmit={handleCriarServico} style={{ ...card, display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: 2, minWidth: 180 }}>
+              <label style={{ display: 'block', fontSize: 11, color: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Nome do serviço</label>
+              <input style={{ ...input, width: '100%' }} type="text" placeholder="Ex: Corte simples" value={novoNome} onChange={e => setNome(e.target.value)} required />
+            </div>
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <label style={{ display: 'block', fontSize: 11, color: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Preço (R$)</label>
+              <input style={{ ...input, width: '100%' }} type="number" min="0" step="0.01" placeholder="35.00" value={novoPreco} onChange={e => setPreco(e.target.value)} required />
+            </div>
+            <button type="submit"
+              style={{ padding: '9px 20px', background: '#D4A853', color: '#111', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+              + Adicionar
+            </button>
+          </form>
+
+          <div style={card}>
+            {servicos.length === 0
+              ? <p style={{ color: '#555', textAlign: 'center', padding: '1.5rem' }}>Nenhum serviço cadastrado ainda</p>
+              : servicos.map(s => (
+                <div key={s._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #2a2a2a' }}>
+                  <span style={{ fontSize: 15, color: '#f0ede6' }}>{s.nome}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <span style={{ color: '#D4A853', fontWeight: 500 }}>R$ {Number(s.preco).toFixed(2)}</span>
+                    <button onClick={() => handleDeletarServico(s._id)}
+                      style={{ padding: '5px 12px', fontSize: 12, border: '1px solid #3a1f1f', background: 'none', color: '#8b4a4a', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
+
+      {/* HORÁRIOS */}
       {tab === 'horarios' && (
         <div>
-          <p style={{ fontSize: 13, color: '#555', marginBottom: '1.5rem' }}>
-            Selecione os horários que você atende em cada dia da semana
-          </p>
+          <p style={{ fontSize: 13, color: '#555', marginBottom: '1.5rem' }}>Selecione os horários que você atende em cada dia</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
             {DIAS.map(({ key, label }) => (
               <div key={key} style={card}>

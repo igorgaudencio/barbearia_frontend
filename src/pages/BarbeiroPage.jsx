@@ -76,7 +76,7 @@ export default function BarbeiroPage() {
           )}
 
           <button type="submit" disabled={loading}
-            style={{ width: '100%', padding: 13, background: '#D4A853', color: '#111', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}>
+            style={{ width: '100%', padding: 13, background: '#ffffff', color: '#111', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}>
             {loading ? 'Aguarde...' : modo === 'login' ? 'Entrar no painel' : 'Criar conta'}
           </button>
         </form>
