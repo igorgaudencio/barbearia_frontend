@@ -18,6 +18,18 @@ const TODOS_HORARIOS = [
   '16:00','16:30','17:00','17:30','18:00'
 ]
 
+function formatarDataAgendamento(data) {
+  if (!data) return ''
+
+  const apenasData = data.split('T')[0]
+  const partes = apenasData.split('-')
+
+  if (partes.length !== 3) return data
+
+  const [ano, mes, dia] = partes
+  return `${dia}-${mes}-${ano}`
+}
+
 export default function PainelPage() {
   const [tab, setTab]           = useState('agendamentos')
   const [agendamentos, setAg]   = useState([])
@@ -134,7 +146,7 @@ export default function PainelPage() {
                   <p style={{ fontSize: 13, color: '#D4A853' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 13, color: '#888' }}>{a.data}</p>
+                  <p style={{ fontSize: 13, color: '#888' }}>{formatarDataAgendamento(a.data)}</p>
                   <p style={{ color: '#D4A853', fontWeight: 500 }}>{a.horario}</p>
                 </div>
                 <span style={{ fontSize: 12, background: '#162116', color: '#5a9e5a', border: '1px solid #2a4a2a', padding: '3px 10px', borderRadius: 999 }}>
