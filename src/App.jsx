@@ -13,7 +13,7 @@ function RotaProtegida({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-right" toastOptions={{
+      <Toaster position="bottom-right" reverseOrder={true} toastOptions={{
         style: { background: '#1c1c1c', color: '#f0ede6', border: '1px solid #D4A853', fontSize: '14px' }
       }} />
       <Routes>
