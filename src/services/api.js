@@ -17,14 +17,17 @@ export const login = (email, password) =>
 export const cadastrar = (email, password, password_confirmation) =>
   api.post('/auth/cadastro', { email, password, password_confirmation }).then(r => r.data)
 
-export const getAgendamentos = () =>
-  api.get('/agendamentos').then(r => r.data)
+export const getAgendamentos = (params = {}) =>
+  api.get('/agendamentos', { params }).then(r => r.data)
 
 export const criarAgendamento = (payload) =>
   api.post('/agendamentos', { agendamento: payload }).then(r => r.data)
 
 export const deletarAgendamento = (id) =>
   api.delete(`/agendamentos/${id}`).then(r => r.data)
+
+export const atualizarStatusAgendamento = (id, status) =>
+  api.patch(`/agendamentos/${id}`, { agendamento: { status } }).then(r => r.data)
 
 export const getHorarios = () =>
   api.get('/horarios').then(r => r.data)

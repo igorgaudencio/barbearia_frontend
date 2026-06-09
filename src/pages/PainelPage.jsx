@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { getAgendamentos, deletarAgendamento, getHorarios, salvarHorarios, getServicos, criarServico, deletarServico } from '../services/api'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { getAgendamentos, deletarAgendamento, atualizarStatusAgendamento, getHorarios, salvarHorarios, getServicos, criarServico, deletarServico } from '../services/api'
 import toast from 'react-hot-toast'
 
 const DIAS = [
@@ -27,6 +27,24 @@ function criarHorarios(horaInicial, horaFinal) {
 const HORARIOS_PADRAO = criarHorarios(7, 18)
 const HORARIOS_EXPANDIDOS = criarHorarios(5, 23)
 const CHAVE_VISUALIZACAO_HORARIOS = 'painel_horarios_expandidos'
+const FILTROS_RECEITA = [
+  { key: 'dia', label: 'Dia' },
+  { key: 'semana', label: 'Semana' },
+  { key: 'mes', label: 'Mês' },
+  { key: 'ano', label: 'Ano' },
+]
+const LIMITES_AGENDAMENTOS = [10, 20, 50]
+const STATUS_AGENDAMENTO = {
+  PENDENTE: 'PENDENTE',
+  ATENDIDO: 'ATENDIDO',
+  AUSENTE: 'AUSENTE',
+  CONFIRMADO: 'CONFIRMADO',
+}
+const FILTROS_STATUS_AGENDAMENTO = [
+  { key: STATUS_AGENDAMENTO.PENDENTE, label: 'Pendente' },
+  { key: STATUS_AGENDAMENTO.ATENDIDO, label: 'Atendido' },
+  { key: STATUS_AGENDAMENTO.AUSENTE, label: 'Ausente' },
+]
 
 function ordenarHorarios(horarios) {
   return [...horarios].sort((a, b) => HORARIOS_EXPANDIDOS.indexOf(a) - HORARIOS_EXPANDIDOS.indexOf(b))
@@ -44,11 +62,125 @@ function formatarDataAgendamento(data) {
   return `${dia}-${mes}-${ano}`
 }
 
+function dataLocal(data) {
+  if (!data) return null
+
+  const apenasData = data.split('T')[0]
+  const partes = apenasData.split('-').map(Number)
+
+  if (partes.length !== 3 || partes.some(Number.isNaN)) return null
+
+  const [ano, mes, dia] = partes
+  return new Date(ano, mes - 1, dia)
+}
+
+function dataInput(date) {
+  const ano = date.getFullYear()
+  const mes = String(date.getMonth() + 1).padStart(2, '0')
+  const dia = String(date.getDate()).padStart(2, '0')
+  return `${ano}-${mes}-${dia}`
+}
+
+function mesmoDia(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate()
+}
+
+function inicioSemana(date) {
+  const inicio = new Date(date)
+  const diaSemana = inicio.getDay()
+  const deslocamento = diaSemana === 0 ? -6 : 1 - diaSemana
+  inicio.setDate(inicio.getDate() + deslocamento)
+  inicio.setHours(0, 0, 0, 0)
+  return inicio
+}
+
+function fimSemana(date) {
+  const fim = inicioSemana(date)
+  fim.setDate(fim.getDate() + 6)
+  fim.setHours(23, 59, 59, 999)
+  return fim
+}
+
+function formatarPeriodo(filtro, referencia) {
+  if (filtro === 'dia') return formatarDataAgendamento(dataInput(referencia))
+
+  if (filtro === 'semana') {
+    return `${formatarDataAgendamento(dataInput(inicioSemana(referencia)))} até ${formatarDataAgendamento(dataInput(fimSemana(referencia)))}`
+  }
+
+  if (filtro === 'mes') {
+    return referencia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  }
+
+  return String(referencia.getFullYear())
+}
+
+function pertenceAoFiltro(data, filtro, referencia) {
+  if (!data) return false
+
+  if (filtro === 'dia') return mesmoDia(data, referencia)
+
+  if (filtro === 'semana') {
+    return data >= inicioSemana(referencia) && data <= fimSemana(referencia)
+  }
+
+  if (filtro === 'mes') {
+    return data.getFullYear() === referencia.getFullYear() && data.getMonth() === referencia.getMonth()
+  }
+
+  return data.getFullYear() === referencia.getFullYear()
+}
+
+function formatarMoeda(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function statusAtendido(status) {
+  return status === STATUS_AGENDAMENTO.ATENDIDO || status === STATUS_AGENDAMENTO.CONFIRMADO
+}
+
+function rotuloStatus(status) {
+  if (status === STATUS_AGENDAMENTO.ATENDIDO || status === STATUS_AGENDAMENTO.CONFIRMADO) return 'Atendido'
+  if (status === STATUS_AGENDAMENTO.AUSENTE) return 'Ausente'
+  return 'Pendente'
+}
+
+function estiloStatus(status) {
+  if (statusAtendido(status)) {
+    return {
+      background: 'var(--success-bg)',
+      color: 'var(--success-text)',
+      border: '1px solid var(--success-border)'
+    }
+  }
+
+  if (status === STATUS_AGENDAMENTO.AUSENTE) {
+    return {
+      background: 'var(--danger-soft)',
+      color: 'var(--danger)',
+      border: '1px solid var(--danger-border)'
+    }
+  }
+
+  return {
+    background: 'var(--bg-surface)',
+    color: 'var(--text-secondary)',
+    border: '1px solid var(--border)'
+  }
+}
+
 export default function PainelPage() {
-  const [tab, setTab]           = useState('agendamentos')
+  const [tab, setTab]           = useState('dashboard')
   const [agendamentos, setAg]   = useState([])
+  const [limiteAgendamentos, setLimiteAgendamentos] = useState(10)
+  const [paginaAgendamentos, setPaginaAgendamentos] = useState(1)
+  const [filtroStatusAgendamento, setFiltroStatusAgendamento] = useState(STATUS_AGENDAMENTO.PENDENTE)
   const [configs, setConfigs]   = useState({})
   const [servicos, setServicos] = useState([])
+  const [filtroReceita, setFiltroReceita] = useState('mes')
+  const [dataReferencia, setDataReferencia] = useState(() => dataInput(new Date()))
   const [novoNome, setNome]     = useState('')
   const [novoPreco, setPreco]   = useState('')
   const [loading, setLoading]   = useState(true)
@@ -58,9 +190,9 @@ export default function PainelPage() {
   const dragStateRef            = useRef({ active: false, day: null, shouldSelect: true, visited: new Set() })
   const email                   = localStorage.getItem('email')
 
-  async function carregarAg() {
+  async function carregarAg(status = STATUS_AGENDAMENTO.PENDENTE) {
     setLoading(true)
-    try { setAg(await getAgendamentos()) }
+    try { setAg(await getAgendamentos({ status })) }
     catch { toast.error('Erro ao carregar agendamentos') }
     finally { setLoading(false) }
   }
@@ -86,6 +218,18 @@ export default function PainelPage() {
       setAg(prev => prev.filter(a => a._id !== id))
       toast.success('Cancelado!')
     } catch { toast.error('Erro ao cancelar') }
+  }
+
+  async function atualizarStatus(id, status) {
+    try {
+      const atualizado = await atualizarStatusAgendamento(id, status)
+      setAg(prev => (
+        status === filtroStatusAgendamento
+          ? prev.map(a => a._id === id ? atualizado : a)
+          : prev.filter(a => a._id !== id)
+      ))
+      toast.success(status === STATUS_AGENDAMENTO.ATENDIDO ? 'Atendimento confirmado!' : 'Cliente marcado como ausente!')
+    } catch { toast.error('Erro ao atualizar agendamento') }
   }
 
   function toggleHorario(dia, h) {
@@ -208,9 +352,12 @@ export default function PainelPage() {
     } catch { toast.error('Erro ao remover') }
   }
 
-  useEffect(() => { carregarAg() }, [])
-  useEffect(() => { if (tab === 'horarios') carregarHorarios() }, [tab])
-  useEffect(() => { if (tab === 'servicos') carregarServicos() }, [tab])
+  useEffect(() => {
+    const status = tab === 'dashboard' ? STATUS_AGENDAMENTO.ATENDIDO : filtroStatusAgendamento
+    void Promise.resolve().then(() => carregarAg(status))
+  }, [tab, filtroStatusAgendamento])
+  useEffect(() => { if (tab === 'horarios') void Promise.resolve().then(carregarHorarios) }, [tab])
+  useEffect(() => { if (tab === 'servicos') void Promise.resolve().then(carregarServicos) }, [tab])
   useEffect(() => {
     localStorage.setItem(CHAVE_VISUALIZACAO_HORARIOS, String(horariosExpandidos))
   }, [horariosExpandidos])
@@ -247,6 +394,42 @@ export default function PainelPage() {
     overflowWrap: 'anywhere',
     wordBreak: 'break-word'
   }
+  const metricGrid = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '1rem'
+  }
+  const receitaReferencia = useMemo(() => dataLocal(dataReferencia) || new Date(), [dataReferencia])
+  const totalPaginasAgendamentos = Math.max(1, Math.ceil(agendamentos.length / limiteAgendamentos))
+  const paginaAtualAgendamentos = Math.min(paginaAgendamentos, totalPaginasAgendamentos)
+  const primeiroAgendamentoPagina = (paginaAtualAgendamentos - 1) * limiteAgendamentos
+  const agendamentosVisiveis = useMemo(
+    () => agendamentos.slice(primeiroAgendamentoPagina, primeiroAgendamentoPagina + limiteAgendamentos),
+    [agendamentos, primeiroAgendamentoPagina, limiteAgendamentos]
+  )
+  const dashboard = useMemo(() => {
+    const agendamentosFiltrados = agendamentos
+      .map(agendamento => ({ ...agendamento, dataCalculada: dataLocal(agendamento.data) }))
+      .filter(agendamento => statusAtendido(agendamento.status))
+      .filter(agendamento => pertenceAoFiltro(agendamento.dataCalculada, filtroReceita, receitaReferencia))
+
+    const total = agendamentosFiltrados.reduce((soma, agendamento) => soma + Number(agendamento.servico_preco || 0), 0)
+    const porServicoMap = agendamentosFiltrados.reduce((map, agendamento) => {
+      const nome = agendamento.servico_nome || 'Serviço sem nome'
+      const atual = map.get(nome) || { nome, quantidade: 0, total: 0 }
+
+      atual.quantidade += 1
+      atual.total += Number(agendamento.servico_preco || 0)
+      map.set(nome, atual)
+
+      return map
+    }, new Map())
+
+    const porServico = [...porServicoMap.values()].sort((a, b) => b.total - a.total)
+    const ticketMedio = agendamentosFiltrados.length > 0 ? total / agendamentosFiltrados.length : 0
+
+    return { agendamentosFiltrados, total, porServico, ticketMedio }
+  }, [agendamentos, filtroReceita, receitaReferencia])
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem' }}>
@@ -256,46 +439,235 @@ export default function PainelPage() {
           <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-secondary)' }}>{email}</p>
         </div>
         <div style={{ display: 'flex', gap: 6, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 4 }}>
+          <button style={tabStyle(tab === 'dashboard')} onClick={() => setTab('dashboard')}>Dashboard</button>
           <button style={tabStyle(tab === 'agendamentos')} onClick={() => setTab('agendamentos')}>Agendamentos</button>
           <button style={tabStyle(tab === 'servicos')}     onClick={() => setTab('servicos')}>Serviços</button>
           <button style={tabStyle(tab === 'horarios')}     onClick={() => setTab('horarios')}>Horários</button>
         </div>
       </div>
 
+      {/* DASHBOARD */}
+      {tab === 'dashboard' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ ...card, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <h2 style={{ fontFamily: 'serif', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Dashboard de ganhos</h2>
+              <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                Somatória dos serviços prestados em {formatarPeriodo(filtroReceita, receitaReferencia)}.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Período</label>
+                <div style={{ display: 'flex', gap: 6, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 4 }}>
+                  {FILTROS_RECEITA.map(filtro => (
+                    <button
+                      key={filtro.key}
+                      type="button"
+                      onClick={() => setFiltroReceita(filtro.key)}
+                      style={tabStyle(filtroReceita === filtro.key)}
+                    >
+                      {filtro.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Data base</label>
+                <input style={input} type="date" value={dataReferencia} onChange={e => setDataReferencia(e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={card}>
+              <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Carregando dashboard...</p>
+            </div>
+          ) : (
+            <>
+              <div style={metricGrid}>
+                <div style={card}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Ganhos totais</p>
+                  <strong style={{ display: 'block', fontSize: 30, lineHeight: 1.2, color: 'var(--gold-strong)' }}>{formatarMoeda(dashboard.total)}</strong>
+                </div>
+                <div style={card}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Serviços prestados</p>
+                  <strong style={{ display: 'block', fontSize: 30, lineHeight: 1.2 }}>{dashboard.agendamentosFiltrados.length}</strong>
+                </div>
+                <div style={card}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Ticket médio</p>
+                  <strong style={{ display: 'block', fontSize: 30, lineHeight: 1.2 }}>{formatarMoeda(dashboard.ticketMedio)}</strong>
+                </div>
+                <div style={card}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Tipos de serviço</p>
+                  <strong style={{ display: 'block', fontSize: 30, lineHeight: 1.2 }}>{dashboard.porServico.length}</strong>
+                </div>
+              </div>
+
+              <div style={card}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: '1rem' }}>Ganhos por serviço</h3>
+                {dashboard.porServico.length === 0 ? (
+                  <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem' }}>Nenhum serviço prestado nesse período</p>
+                ) : dashboard.porServico.map(servico => {
+                  const percentual = dashboard.total > 0 ? (servico.total / dashboard.total) * 100 : 0
+
+                  return (
+                    <div key={servico.nome} style={{ padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 8 }}>
+                        <div>
+                          <p style={{ fontSize: 16, fontWeight: 700 }}>{servico.nome}</p>
+                          <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{servico.quantidade} atendimento(s)</p>
+                        </div>
+                        <strong style={{ fontSize: 17, color: 'var(--gold-strong)' }}>{formatarMoeda(servico.total)}</strong>
+                      </div>
+                      <div style={{ height: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 999, overflow: 'hidden' }}>
+                        <div style={{ width: `${percentual}%`, height: '100%', background: 'var(--gold)' }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div style={card}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: '1rem' }}>Atendimentos do período</h3>
+                {dashboard.agendamentosFiltrados.length === 0 ? (
+                  <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem' }}>Nenhum atendimento encontrado</p>
+                ) : dashboard.agendamentosFiltrados.map(agendamento => (
+                  <div key={agendamento._id} style={{ ...appointmentGrid, padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                    <div style={appointmentCell}>
+                      <p style={{ fontSize: 16, fontWeight: 700 }}>{agendamento.nome}</p>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{agendamento.servico_nome}</p>
+                    </div>
+                    <div style={{ ...appointmentCell, textAlign: 'center' }}>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{formatarDataAgendamento(agendamento.data)}</p>
+                      <p style={{ fontSize: 15, color: 'var(--gold-strong)', fontWeight: 700 }}>{agendamento.horario}</p>
+                    </div>
+                    <div style={{ ...appointmentCell, textAlign: 'right' }}>
+                      <strong style={{ fontSize: 16, color: 'var(--gold-strong)' }}>{formatarMoeda(agendamento.servico_preco)}</strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* AGENDAMENTOS */}
       {tab === 'agendamentos' && (
         <div style={card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+            <div>
+              <h2 style={{ fontFamily: 'serif', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Agendamentos</h2>
+              <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                Exibindo {agendamentosVisiveis.length} de {agendamentos.length} agendamento(s). Página {paginaAtualAgendamentos} de {totalPaginasAgendamentos}.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Status</label>
+                <select
+                  style={input}
+                  value={filtroStatusAgendamento}
+                  onChange={e => {
+                    setPaginaAgendamentos(1)
+                    setFiltroStatusAgendamento(e.target.value)
+                  }}
+                >
+                  {FILTROS_STATUS_AGENDAMENTO.map(filtro => (
+                    <option key={filtro.key} value={filtro.key}>{filtro.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Mostrar</label>
+                <select
+                  style={input}
+                  value={limiteAgendamentos}
+                  onChange={e => {
+                    setPaginaAgendamentos(1)
+                    setLimiteAgendamentos(Number(e.target.value))
+                  }}
+                >
+                  {LIMITES_AGENDAMENTOS.map(limite => (
+                    <option key={limite} value={limite}>{limite} agendamentos</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
           {loading
             ? <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Carregando...</p>
             : agendamentos.length === 0
             ? <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Nenhum agendamento ainda</p>
-            : agendamentos.map(a => (
-              <div key={a._id} style={{ ...appointmentGrid, padding: '14px 0', borderBottom: '1px solid var(--border)' }}>
-                <div style={appointmentCell}>
-                  <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{a.nome}</p>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{a.email}</p>
-                </div>
-                <div style={{ ...appointmentCell, textAlign: 'center' }}>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{a.servico_nome}</p>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--gold-strong)' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
-                </div>
-                <div style={{ ...appointmentCell, textAlign: 'center' }}>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{formatarDataAgendamento(a.data)}</p>
-                  <p style={{ fontSize: 15, color: 'var(--gold-strong)', fontWeight: 700 }}>{a.horario}</p>
-                </div>
-                <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, background: 'var(--success-bg)', color: 'var(--success-text)', border: '1px solid var(--success-border)', padding: '4px 10px', borderRadius: 999, textAlign: 'center' }}>
-                    {a.status}
+            : (
+              <>
+                {agendamentosVisiveis.map(a => (
+                  <div key={a._id} style={{ ...appointmentGrid, padding: '14px 0', borderBottom: '1px solid var(--border)' }}>
+                    <div style={appointmentCell}>
+                      <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{a.nome}</p>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{a.email}</p>
+                    </div>
+                    <div style={{ ...appointmentCell, textAlign: 'center' }}>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{a.servico_nome}</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--gold-strong)' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
+                    </div>
+                    <div style={{ ...appointmentCell, textAlign: 'center' }}>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{formatarDataAgendamento(a.data)}</p>
+                      <p style={{ fontSize: 15, color: 'var(--gold-strong)', fontWeight: 700 }}>{a.horario}</p>
+                    </div>
+                    <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, ...estiloStatus(a.status), padding: '4px 10px', borderRadius: 999, textAlign: 'center' }}>
+                        {rotuloStatus(a.status)}
+                      </span>
+                    </div>
+                    <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => atualizarStatus(a._id, STATUS_AGENDAMENTO.ATENDIDO)}
+                        disabled={statusAtendido(a.status)}
+                        style={{ padding: '8px 12px', fontSize: 14, fontWeight: 600, border: '1px solid var(--success-border)', background: statusAtendido(a.status) ? 'var(--bg-surface)' : 'var(--success-bg}', color: 'var(--success-text)', borderRadius: 6, cursor: statusAtendido(a.status) ? 'default' : 'pointer', opacity: statusAtendido(a.status) ? 0.6 : 1, whiteSpace: 'normal' }}
+                      >
+                        Atendido
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => atualizarStatus(a._id, STATUS_AGENDAMENTO.AUSENTE)}
+                        disabled={a.status === STATUS_AGENDAMENTO.AUSENTE}
+                        style={{ padding: '8px 12px', fontSize: 14, fontWeight: 600, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: a.status === STATUS_AGENDAMENTO.AUSENTE ? 'default' : 'pointer', opacity: a.status === STATUS_AGENDAMENTO.AUSENTE ? 0.6 : 1, whiteSpace: 'normal' }}
+                      >
+                        Ausente
+                      </button>
+                      <button onClick={() => cancelar(a._id)}
+                        style={{ padding: '8px 14px', fontSize: 14, fontWeight: 600, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: 'pointer', whiteSpace: 'normal' }}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', paddingTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPaginaAgendamentos(pagina => Math.max(1, pagina - 1))}
+                    disabled={paginaAtualAgendamentos === 1}
+                    style={{ padding: '9px 14px', fontSize: 14, fontWeight: 700, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', borderRadius: 6, cursor: paginaAtualAgendamentos === 1 ? 'default' : 'pointer', opacity: paginaAtualAgendamentos === 1 ? 0.5 : 1 }}
+                  >
+                    Anterior
+                  </button>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                    Página {paginaAtualAgendamentos} de {totalPaginasAgendamentos}
                   </span>
-                </div>
-                <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
-                  <button onClick={() => cancelar(a._id)}
-                    style={{ padding: '8px 14px', fontSize: 14, fontWeight: 600, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: 'pointer', whiteSpace: 'normal' }}>
-                    Cancelar
+                  <button
+                    type="button"
+                    onClick={() => setPaginaAgendamentos(pagina => Math.min(totalPaginasAgendamentos, pagina + 1))}
+                    disabled={paginaAtualAgendamentos === totalPaginasAgendamentos}
+                    style={{ padding: '9px 14px', fontSize: 14, fontWeight: 700, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', borderRadius: 6, cursor: paginaAtualAgendamentos === totalPaginasAgendamentos ? 'default' : 'pointer', opacity: paginaAtualAgendamentos === totalPaginasAgendamentos ? 0.5 : 1 }}
+                  >
+                    Próxima
                   </button>
                 </div>
-              </div>
-            ))
+              </>
+            )
           }
         </div>
       )}
