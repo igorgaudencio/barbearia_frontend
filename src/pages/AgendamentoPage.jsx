@@ -2,6 +2,23 @@ import { useState, useEffect } from 'react'
 import { criarAgendamento, getHorariosDisponiveis, getServicos } from '../services/api'
 import toast from 'react-hot-toast'
 
+function getLocalDateInputValue() {
+  const now = new Date()
+  const timezoneOffset = now.getTimezoneOffset() * 60 * 1000
+  return new Date(now.getTime() - timezoneOffset).toISOString().split('T')[0]
+}
+
+function createLocalDateTime(dateValue, timeValue) {
+  const [year, month, day] = dateValue.split('-').map(Number)
+  const [hours, minutes] = timeValue.split(':').map(Number)
+  return new Date(year, month - 1, day, hours, minutes, 0, 0)
+}
+
+function isFutureSlot(dateValue, timeValue) {
+  if (!dateValue || !timeValue) return false
+  return createLocalDateTime(dateValue, timeValue) > new Date()
+}
+
 export default function AgendamentoPage() {
   const [nome, setNome]           = useState('')
   const [email, setEmail]         = useState('')
@@ -14,7 +31,7 @@ export default function AgendamentoPage() {
   const [loading, setLoading]     = useState(false)
   const [sucesso, setSucesso]     = useState(false)
 
-  const hoje = new Date().toISOString().split('T')[0]
+  const hoje = getLocalDateInputValue()
 
   useEffect(() => {
     getServicos()
@@ -41,6 +58,11 @@ export default function AgendamentoPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!isFutureSlot(data, horario)) {
+      toast.error('Selecione um horário que ainda não tenha passado')
+      setHorario('')
+      return
+    }
     setLoading(true)
     try {
       await criarAgendamento({ nome, email, data, horario, servico_id: servicoId })
@@ -57,6 +79,7 @@ export default function AgendamentoPage() {
   }
 
   const servicoSelecionado = servicos.find(s => s._id === servicoId)
+  const horariosDisponiveis = slots?.disponiveis?.filter(h => isFutureSlot(data, h)) ?? []
   const input = { width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', outline: 'none' }
   const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
   const card  = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '2rem' }
@@ -144,12 +167,12 @@ export default function AgendamentoPage() {
                   ))}
                 </div>
               )}
-              {slots && !loadingSlots && slots.disponiveis?.length === 0 && (
+              {slots && !loadingSlots && horariosDisponiveis.length === 0 && (
                 <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', padding: '10px 0' }}>Nenhum horário disponível neste dia</p>
               )}
-              {slots && !loadingSlots && slots.disponiveis?.length > 0 && (
+              {slots && !loadingSlots && horariosDisponiveis.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                  {slots.disponiveis.map(h => (
+                  {horariosDisponiveis.map(h => (
                     <button key={h} type="button" onClick={() => setHorario(h)}
                       style={{
                         padding: '10px 4px',
