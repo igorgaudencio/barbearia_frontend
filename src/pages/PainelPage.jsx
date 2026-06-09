@@ -355,7 +355,7 @@ export default function PainelPage() {
           <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>Clique e arraste sobre os horários para marcar ou desmarcar vários de uma vez.</p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
             <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>
-              Exibindo por padrão 07:00 até 18:00.
+              
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
