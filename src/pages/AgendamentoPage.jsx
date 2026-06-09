@@ -20,6 +20,13 @@ function isFutureSlot(dateValue, timeValue) {
   return createLocalDateTime(dateValue, timeValue) > new Date()
 }
 
+function formatDisplayDate(dateValue) {
+  if (!dateValue) return ''
+  const [year, month, day] = dateValue.split('-')
+  if (!year || !month || !day) return dateValue
+  return `${day}/${month}/${year}`
+}
+
 export default function AgendamentoPage() {
   const { slogan } = barbershopConfig
   const [nome, setNome]           = useState('')
@@ -212,7 +219,7 @@ export default function AgendamentoPage() {
                 {data && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '4px 0' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Data</span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{data}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{formatDisplayDate(data)}</span>
                   </div>
                 )}
                 {horario && (
