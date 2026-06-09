@@ -9,14 +9,27 @@ const DIAS = [
   { key: 'thursday', label: 'Quinta-feira'  },
   { key: 'friday',   label: 'Sexta-feira'   },
   { key: 'saturday', label: 'Sábado'        },
+  { key: 'sunday',   label: 'Domingo'       },
 ]
 
-const TODOS_HORARIOS = [
-  '07:00','07:30','08:00','08:30','09:00','09:30',
-  '10:00','10:30','11:00','11:30','12:00','12:30',
-  '13:00','13:30','14:00','14:30','15:00','15:30',
-  '16:00','16:30','17:00','17:30','18:00'
-]
+function criarHorarios(horaInicial, horaFinal) {
+  const quantidade = ((horaFinal - horaInicial) * 2) + 1
+
+  return Array.from({ length: quantidade }, (_, index) => {
+    const totalMinutos = (horaInicial * 60) + (index * 30)
+    const horas = Math.floor(totalMinutos / 60)
+    const minutos = totalMinutos % 60
+
+    return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`
+  })
+}
+
+const HORARIOS_PADRAO = criarHorarios(7, 18)
+const HORARIOS_EXPANDIDOS = criarHorarios(5, 22)
+
+function ordenarHorarios(horarios) {
+  return [...horarios].sort((a, b) => HORARIOS_EXPANDIDOS.indexOf(a) - HORARIOS_EXPANDIDOS.indexOf(b))
+}
 
 function formatarDataAgendamento(data) {
   if (!data) return ''
@@ -39,6 +52,8 @@ export default function PainelPage() {
   const [novoPreco, setPreco]   = useState('')
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(null)
+  const [bulkSaving, setBulkSaving] = useState(false)
+  const [horariosExpandidos, setHorariosExpandidos] = useState(false)
   const dragStateRef            = useRef({ active: false, day: null, shouldSelect: true, visited: new Set() })
   const email                   = localStorage.getItem('email')
 
@@ -53,7 +68,7 @@ export default function PainelPage() {
     try {
       const data = await getHorarios()
       const map = {}
-      data.forEach(c => { map[c.dia_semana] = c.horarios })
+      data.forEach(c => { map[c.dia_semana] = ordenarHorarios(c.horarios) })
       setConfigs(map)
     } catch { toast.error('Erro ao carregar horários') }
   }
@@ -75,7 +90,10 @@ export default function PainelPage() {
   function toggleHorario(dia, h) {
     setConfigs(prev => {
       const atual = prev[dia] || []
-      return { ...prev, [dia]: atual.includes(h) ? atual.filter(x => x !== h) : [...atual, h].sort() }
+      return {
+        ...prev,
+        [dia]: atual.includes(h) ? atual.filter(x => x !== h) : ordenarHorarios([...atual, h])
+      }
     })
   }
 
@@ -88,7 +106,7 @@ export default function PainelPage() {
 
       return {
         ...prev,
-        [dia]: selecionado ? [...atual, horario].sort() : atual.filter(h => h !== horario)
+        [dia]: selecionado ? ordenarHorarios([...atual, horario]) : atual.filter(h => h !== horario)
       }
     })
   }
@@ -115,14 +133,16 @@ export default function PainelPage() {
     setHorarioSelecionado(dia, horario, dragState.shouldSelect)
   }
 
-  function toggleTodosHorarios(dia) {
+  function toggleTodosHorarios(dia, horariosVisiveis) {
     setConfigs(prev => {
       const atual = prev[dia] || []
-      const todosSelecionados = atual.length === TODOS_HORARIOS.length
+      const todosSelecionados = horariosVisiveis.every(horario => atual.includes(horario))
 
       return {
         ...prev,
-        [dia]: todosSelecionados ? [] : [...TODOS_HORARIOS]
+        [dia]: todosSelecionados
+          ? atual.filter(horario => !horariosVisiveis.includes(horario))
+          : ordenarHorarios([...new Set([...atual, ...horariosVisiveis])])
       }
     })
   }
@@ -134,6 +154,38 @@ export default function PainelPage() {
       toast.success('Horários salvos!')
     } catch { toast.error('Erro ao salvar') }
     finally { setSaving(null) }
+  }
+
+  async function toggleVisualizacaoHorarios() {
+    if (!horariosExpandidos) {
+      setHorariosExpandidos(true)
+      return
+    }
+
+    const proximosConfigs = DIAS.reduce((acc, { key }) => {
+      acc[key] = ordenarHorarios((configs[key] || []).filter(horario => HORARIOS_PADRAO.includes(horario)))
+      return acc
+    }, {})
+
+    setConfigs(prev => ({ ...prev, ...proximosConfigs }))
+    setHorariosExpandidos(false)
+    setBulkSaving(true)
+
+    const resultados = await Promise.allSettled(
+      DIAS.map(({ key }) => salvarHorarios(key, proximosConfigs[key] || []))
+    )
+
+    const houveErro = resultados.some(resultado => resultado.status === 'rejected')
+
+    if (houveErro) {
+      toast.error('Erro ao salvar a grade padrão em todos os dias')
+      await carregarHorarios()
+      setHorariosExpandidos(true)
+    } else {
+      toast.success('Grade padrão aplicada e salva em todos os dias')
+    }
+
+    setBulkSaving(false)
   }
 
   async function handleCriarServico(e) {
@@ -286,13 +338,27 @@ export default function PainelPage() {
       {tab === 'horarios' && (
         <div>
           <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Selecione os horários que você atende em cada dia</p>
-          <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Clique e arraste sobre os horários para marcar ou desmarcar vários de uma vez.</p>
+          <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>Clique e arraste sobre os horários para marcar ou desmarcar vários de uma vez.</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>
+              Exibindo por padrão 07:00 até 18:00.
+            </p>
+            <button
+              type="button"
+              onClick={toggleVisualizacaoHorarios}
+              disabled={bulkSaving}
+              style={{ padding: '10px 14px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: bulkSaving ? 'wait' : 'pointer', opacity: bulkSaving ? 0.6 : 1 }}
+            >
+              {bulkSaving ? 'Salvando grade padrão...' : horariosExpandidos ? 'Mostrar grade padrão' : 'Expandir até 05:00–22:00'}
+            </button>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
             {DIAS.map(({ key, label }) => (
               <div key={key} style={card}>
                 {(() => {
                   const horariosSelecionados = configs[key] || []
-                  const todosSelecionados = horariosSelecionados.length === TODOS_HORARIOS.length
+                  const horariosVisiveis = horariosExpandidos ? HORARIOS_EXPANDIDOS : HORARIOS_PADRAO
+                  const todosSelecionados = horariosVisiveis.every(horario => horariosSelecionados.includes(horario))
 
                   return (
                     <>
@@ -302,18 +368,20 @@ export default function PainelPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => toggleTodosHorarios(key)}
-                  style={{ width: '100%', marginBottom: '0.75rem', padding: '10px 10px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                  onClick={() => toggleTodosHorarios(key, horariosVisiveis)}
+                  disabled={bulkSaving}
+                  style={{ width: '100%', marginBottom: '0.75rem', padding: '10px 10px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: bulkSaving ? 'wait' : 'pointer', opacity: bulkSaving ? 0.6 : 1 }}
                 >
                   {todosSelecionados ? 'Desmarcar todos' : 'Marcar todos'}
                 </button>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: '1rem', userSelect: 'none' }}>
-                  {TODOS_HORARIOS.map(h => {
+                  {horariosVisiveis.map(h => {
                     const active = horariosSelecionados.includes(h)
                     return (
                       <button
                         key={h}
                         type="button"
+                        disabled={bulkSaving}
                         onPointerDown={event => iniciarArrasteHorario(key, h, active, event)}
                         onPointerEnter={() => continuarArrasteHorario(key, h)}
                         onKeyDown={event => {
@@ -326,9 +394,10 @@ export default function PainelPage() {
                           fontSize: 13,
                           fontWeight: 700,
                           borderRadius: 6,
-                          cursor: 'pointer',
+                          cursor: bulkSaving ? 'wait' : 'pointer',
                           border: '1px solid var(--border)',
                           background: 'var(--bg-surface)',
+                          opacity: bulkSaving ? 0.6 : 1,
                           color: active ? 'var(--select-text)' : 'var(--text-secondary)',
                           ...(active ? selectedOption : null)
                         }}>
@@ -337,9 +406,9 @@ export default function PainelPage() {
                     )
                   })}
                 </div>
-                <button type="button" onClick={() => salvar(key)} disabled={saving === key}
-                  style={{ width: '100%', padding: 11, background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: saving === key ? 0.5 : 1 }}>
-                  {saving === key ? 'Salvando...' : 'Salvar'}
+                <button type="button" onClick={() => salvar(key)} disabled={saving === key || bulkSaving}
+                  style={{ width: '100%', padding: 11, background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 700, cursor: bulkSaving ? 'wait' : 'pointer', opacity: saving === key || bulkSaving ? 0.5 : 1 }}>
+                  {saving === key ? 'Salvando...' : bulkSaving ? 'Aguarde...' : 'Salvar'}
                 </button>
                     </>
                   )
