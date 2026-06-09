@@ -25,7 +25,7 @@ function criarHorarios(horaInicial, horaFinal) {
 }
 
 const HORARIOS_PADRAO = criarHorarios(7, 18)
-const HORARIOS_EXPANDIDOS = criarHorarios(5, 23)
+const HORARIOS_EXPANDIDOS = criarHorarios(5, 22)
 const CHAVE_VISUALIZACAO_HORARIOS = 'painel_horarios_expandidos'
 
 function ordenarHorarios(horarios) {
