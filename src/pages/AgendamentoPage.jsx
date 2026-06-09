@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react'
 import { criarAgendamento, getHorariosDisponiveis, getServicos } from '../services/api'
 import toast from 'react-hot-toast'
 
+function dataInputLocal(date) {
+  const ano = date.getFullYear()
+  const mes = String(date.getMonth() + 1).padStart(2, '0')
+  const dia = String(date.getDate()).padStart(2, '0')
+
+  return `${ano}-${mes}-${dia}`
+}
+
 export default function AgendamentoPage() {
   const [nome, setNome]           = useState('')
   const [email, setEmail]         = useState('')
@@ -15,7 +23,7 @@ export default function AgendamentoPage() {
   const [loading, setLoading]     = useState(false)
   const [sucesso, setSucesso]     = useState(false)
 
-  const hoje = new Date().toISOString().split('T')[0]
+  const hoje = dataInputLocal(new Date())
 
   useEffect(() => {
     getServicos()
