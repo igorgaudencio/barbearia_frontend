@@ -4,7 +4,7 @@ const linkStyle = (active) => ({
   padding: '8px 18px', fontSize: 15, fontWeight: 600, borderRadius: 8, textDecoration: 'none',
   border: '1px solid ' + (active ? 'var(--border-strong)' : 'transparent'),
   background: active ? 'var(--bg-card)' : 'none',
-  color: active ? 'var(--gold)' : 'var(--text-secondary)'
+  color: active ? 'var(--gold-strong)' : 'var(--text-secondary)'
 })
 
 export default function Layout({ theme, toggleTheme }) {
@@ -47,7 +47,7 @@ export default function Layout({ theme, toggleTheme }) {
               <NavLink to="/painel" style={({ isActive }) => linkStyle(isActive)}>
                 Painel
               </NavLink>
-              <button onClick={logout} style={{ padding: '8px 18px', fontSize: 15, fontWeight: 600, borderRadius: 8, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
+              <button onClick={logout} style={{ padding: '8px 18px', fontSize: 15, fontWeight: 600, borderRadius: 8, border: '1px solid var(--danger-border)', background: 'var(--danger-soft)', color: 'var(--danger)', cursor: 'pointer' }}>
                 Sair
               </button>
             </>
@@ -64,7 +64,7 @@ export default function Layout({ theme, toggleTheme }) {
       </main>
 
       <footer style={{ background: 'var(--bg-hero)', borderTop: '1px solid var(--border-soft)', textAlign: 'center', padding: '1.25rem', fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}>
-        <span style={{ color: 'var(--gold)' }}>Barbearia Coquilho</span> · Rua dos Caminhões, 67 · (84) 98747-9792
+        <span style={{ color: 'var(--gold-strong)' }}>Barbearia Coquilho</span> · Rua dos Caminhões, 67 · (84) 98747-9792
       </footer>
     </div>
   )

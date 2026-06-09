@@ -64,7 +64,7 @@ export default function AgendamentoPage() {
   return (
     <div>
       <div style={{ background: 'var(--bg-hero)', borderBottom: '1px solid var(--border-soft)', textAlign: 'center', padding: '3rem 2rem' }}>
-        <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: 12 }}>Agende seu horário</p>
+        <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--gold-strong)', textTransform: 'uppercase', marginBottom: 12 }}>Agende seu horário</p>
         <h1 style={{ fontFamily: 'serif', fontSize: 42, fontWeight: 700, marginBottom: 10 }}>Seu estilo, na hora certa</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 18, fontWeight: 500 }}>Escolha o serviço, dia e horário disponível</p>
       </div>
@@ -74,7 +74,7 @@ export default function AgendamentoPage() {
           <div style={{ ...card, textAlign: 'center', padding: '2.5rem', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 48, color: 'var(--gold)', marginBottom: 12 }}>✓</div>
             <h2 style={{ fontFamily: 'serif', fontSize: 26, fontWeight: 700, marginBottom: 8 }}>Agendado com sucesso!</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 500 }}>Confirmação enviada para <strong style={{ color: 'var(--gold)' }}>{email}</strong></p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 500 }}>Confirmação enviada para <strong style={{ color: 'var(--gold-strong)' }}>{email}</strong></p>
           </div>
         ) : (
           <form style={card} onSubmit={handleSubmit}>
@@ -91,8 +91,8 @@ export default function AgendamentoPage() {
                   {servicos.map(s => (
                     <button key={s._id} type="button" onClick={() => setServico(s._id)}
                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (servicoId === s._id ? 'var(--gold)' : 'var(--border)'), background: servicoId === s._id ? 'var(--bg-accent-soft)' : 'var(--bg-surface)' }}>
-                      <span style={{ fontSize: 16, fontWeight: 600, color: servicoId === s._id ? 'var(--gold)' : 'var(--text-primary)' }}>{s.nome}</span>
-                      <span style={{ fontSize: 16, color: 'var(--gold)', fontWeight: 700 }}>
+                      <span style={{ fontSize: 16, fontWeight: 600, color: servicoId === s._id ? 'var(--gold-strong)' : 'var(--text-primary)' }}>{s.nome}</span>
+                      <span style={{ fontSize: 16, color: 'var(--gold-strong)', fontWeight: 700 }}>
                         R$ {Number(s.preco).toFixed(2)}
                       </span>
                     </button>
@@ -136,7 +136,7 @@ export default function AgendamentoPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   {slots.disponiveis.map(h => (
                     <button key={h} type="button" onClick={() => setHorario(h)}
-                      style={{ padding: '10px 4px', fontSize: 15, fontWeight: 600, borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (horario === h ? 'var(--gold)' : 'var(--border)'), background: horario === h ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: horario === h ? 'var(--gold)' : 'var(--text-secondary)' }}>
+                      style={{ padding: '10px 4px', fontSize: 15, fontWeight: 600, borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (horario === h ? 'var(--gold)' : 'var(--border)'), background: horario === h ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: horario === h ? 'var(--gold-strong)' : 'var(--text-secondary)' }}>
                       {h}
                     </button>
                   ))}
@@ -168,7 +168,7 @@ export default function AgendamentoPage() {
                 {horario && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '4px 0' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Horário</span>
-                    <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{horario}</span>
+                    <span style={{ color: 'var(--gold-strong)', fontWeight: 700 }}>{horario}</span>
                   </div>
                 )}
               </div>

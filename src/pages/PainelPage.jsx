@@ -166,11 +166,11 @@ export default function PainelPage() {
                 </div>
                 <div style={{ ...appointmentCell, textAlign: 'center' }}>
                   <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{a.servico_nome}</p>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--gold)' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--gold-strong)' }}>R$ {Number(a.servico_preco).toFixed(2)}</p>
                 </div>
                 <div style={{ ...appointmentCell, textAlign: 'center' }}>
                   <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>{formatarDataAgendamento(a.data)}</p>
-                  <p style={{ fontSize: 15, color: 'var(--gold)', fontWeight: 700 }}>{a.horario}</p>
+                  <p style={{ fontSize: 15, color: 'var(--gold-strong)', fontWeight: 700 }}>{a.horario}</p>
                 </div>
                 <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
                   <span style={{ fontSize: 13, fontWeight: 700, background: 'var(--success-bg)', color: 'var(--success-text)', border: '1px solid var(--success-border)', padding: '4px 10px', borderRadius: 999, textAlign: 'center' }}>
@@ -214,7 +214,7 @@ export default function PainelPage() {
                 <div key={s._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{s.nome}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <span style={{ fontSize: 15, color: 'var(--gold)', fontWeight: 700 }}>R$ {Number(s.preco).toFixed(2)}</span>
+                    <span style={{ fontSize: 15, color: 'var(--gold-strong)', fontWeight: 700 }}>R$ {Number(s.preco).toFixed(2)}</span>
                     <button onClick={() => handleDeletarServico(s._id)}
                       style={{ padding: '7px 12px', fontSize: 14, fontWeight: 600, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: 'pointer' }}>
                       Remover
@@ -242,12 +242,12 @@ export default function PainelPage() {
                     <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <span style={{ fontWeight: 700, fontSize: 16 }}>{label}</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--gold)' }}>{horariosSelecionados.length} horário(s)</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--gold-strong)' }}>{horariosSelecionados.length} horário(s)</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => toggleTodosHorarios(key)}
-                  style={{ width: '100%', marginBottom: '0.75rem', padding: '10px 10px', background: 'none', color: 'var(--gold)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ width: '100%', marginBottom: '0.75rem', padding: '10px 10px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
                 >
                   {todosSelecionados ? 'Desmarcar todos' : 'Marcar todos'}
                 </button>
@@ -256,7 +256,7 @@ export default function PainelPage() {
                     const active = horariosSelecionados.includes(h)
                     return (
                       <button key={h} type="button" onClick={() => toggleHorario(key, h)}
-                        style={{ padding: '8px 4px', fontSize: 13, fontWeight: 600, borderRadius: 6, cursor: 'pointer', border: '1px solid ' + (active ? 'var(--gold)' : 'var(--border)'), background: active ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: active ? 'var(--gold)' : 'var(--text-secondary)' }}>
+                        style={{ padding: '8px 4px', fontSize: 13, fontWeight: 600, borderRadius: 6, cursor: 'pointer', border: '1px solid ' + (active ? 'var(--gold)' : 'var(--border)'), background: active ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: active ? 'var(--gold-strong)' : 'var(--text-secondary)' }}>
                         {h}
                       </button>
                     )
