@@ -47,4 +47,13 @@ export const atualizarServico = (id, payload) =>
 export const deletarServico = (id) =>
   api.delete(`/servicos/${id}`).then(r => r.data)
 
+export const getPromocaoPorData = (data) =>
+  api.get('/promocoes/data', { params: { data } }).then(r => r.data)
+
+export const calcularPromocoes = () =>
+  api.post('/promocoes/calcular').then(r => r.data)
+
+export const getPromocoes = () =>
+  api.get('/promocoes').then(r => r.data)
+
 export default api

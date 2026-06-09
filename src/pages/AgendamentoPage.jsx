@@ -10,6 +10,7 @@ export default function AgendamentoPage() {
   const [servicoId, setServico]   = useState('')
   const [servicos, setServicos]   = useState([])
   const [slots, setSlots]         = useState(null)
+  const [promocao, setPromocao]   = useState(null)
   const [loadingSlots, setLS]     = useState(false)
   const [loading, setLoading]     = useState(false)
   const [sucesso, setSucesso]     = useState(false)
@@ -27,11 +28,13 @@ export default function AgendamentoPage() {
     setData(d)
     setHorario('')
     setSlots(null)
+    setPromocao(null)
     if (!d) return
     setLS(true)
     try {
       const info = await getHorariosDisponiveis(d)
       setSlots(info)
+      setPromocao(info.promocao?.ativo ? info.promocao : null)
     } catch {
       toast.error('Erro ao buscar horários')
     } finally {
@@ -45,7 +48,7 @@ export default function AgendamentoPage() {
     try {
       await criarAgendamento({ nome, email, data, horario, servico_id: servicoId })
       setSucesso(true)
-      setNome(''); setEmail(''); setData(''); setHorario(''); setServico(''); setSlots(null)
+      setNome(''); setEmail(''); setData(''); setHorario(''); setServico(''); setSlots(null); setPromocao(null)
       toast.success('Agendamento confirmado!')
       setTimeout(() => setSucesso(false), 4000)
     } catch (err) {
@@ -57,6 +60,9 @@ export default function AgendamentoPage() {
   }
 
   const servicoSelecionado = servicos.find(s => s._id === servicoId)
+  const descontoPromocional = Number(promocao?.desconto || 0)
+  const temPromocao = descontoPromocional > 0
+  const precoComDesconto = (preco) => Number(preco) * (1 - descontoPromocional / 100)
   const input = { width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', outline: 'none' }
   const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
   const card  = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '2rem' }
@@ -106,10 +112,24 @@ export default function AgendamentoPage() {
                         background: 'var(--bg-surface)',
                         ...(servicoId === s._id ? selectedOption : null)
                       }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: servicoId === s._id ? 'var(--select-text)' : 'var(--text-primary)' }}>{s.nome}</span>
-                      <span style={{ fontSize: 16, color: servicoId === s._id ? 'var(--select-text)' : 'var(--gold-strong)', fontWeight: 700 }}>
-                        R$ {Number(s.preco).toFixed(2)}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 16, fontWeight: 700, color: servicoId === s._id ? 'var(--select-text)' : 'var(--text-primary)' }}>
+                        {s.nome}
+                        {temPromocao && (
+                          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', background: 'var(--success-bg)', color: 'var(--success-text)', border: '1px solid var(--success-border)', borderRadius: 999, padding: '2px 8px' }}>
+                            Promoção -{descontoPromocional}%
+                          </span>
+                        )}
                       </span>
+                      {temPromocao ? (
+                        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.2 }}>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, textDecoration: 'line-through' }}>R$ {Number(s.preco).toFixed(2)}</span>
+                          <span style={{ fontSize: 16, color: servicoId === s._id ? 'var(--select-text)' : 'var(--gold-strong)', fontWeight: 800 }}>R$ {precoComDesconto(s.preco).toFixed(2)}</span>
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 16, color: servicoId === s._id ? 'var(--select-text)' : 'var(--gold-strong)', fontWeight: 700 }}>
+                          R$ {Number(s.preco).toFixed(2)}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -131,6 +151,11 @@ export default function AgendamentoPage() {
             <div style={{ marginBottom: '1rem' }}>
               <label style={label}>Data</label>
               <input style={input} type="date" min={hoje} value={data} onChange={handleDataChange} required />
+              {temPromocao && (
+                <div style={{ marginTop: 8, background: 'var(--success-bg)', color: 'var(--success-text)', border: '1px solid var(--success-border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, fontWeight: 700 }}>
+                  Este dia está com {descontoPromocional}% de desconto em todos os serviços.
+                </div>
+              )}
             </div>
 
             {/* Horários */}
@@ -175,7 +200,15 @@ export default function AgendamentoPage() {
                 {servicoSelecionado && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '4px 0' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Serviço</span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{servicoSelecionado.nome} — R$ {Number(servicoSelecionado.preco).toFixed(2)}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+                      {servicoSelecionado.nome} — R$ {(temPromocao ? precoComDesconto(servicoSelecionado.preco) : Number(servicoSelecionado.preco)).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {temPromocao && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '4px 0' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Promoção</span>
+                    <span style={{ color: 'var(--success-text)', fontWeight: 800 }}>-{descontoPromocional}%</span>
                   </div>
                 )}
                 {nome && (
