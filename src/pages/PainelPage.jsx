@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getAgendamentos, deletarAgendamento, getHorarios, salvarHorarios, getServicos, criarServico, deletarServico } from '../services/api'
+import { getAgendamentos, atualizarAgendamento, deletarAgendamento, getHorarios, salvarHorarios, getServicos, criarServico, deletarServico } from '../services/api'
 import toast from 'react-hot-toast'
 
 const DIAS = [
@@ -27,9 +27,44 @@ function criarHorarios(horaInicial, horaFinal) {
 const HORARIOS_PADRAO = criarHorarios(7, 18)
 const HORARIOS_EXPANDIDOS = criarHorarios(5, 22)
 const CHAVE_VISUALIZACAO_HORARIOS = 'painel_horarios_expandidos'
+const STATUS_CONFIRMADO = 'CONFIRMADO'
+const STATUS_PENDENTE = 'PENDENTE'
+const FILTRO_PENDENTES = 'PENDENTES'
+const FILTRO_TODOS = 'TODOS'
+const FILTRO_ATENDIDOS = 'ATENDIDOS'
+const FILTRO_AUSENTES = 'AUSENTES'
+const AGENDAMENTOS_POR_PAGINA = 6
+const FILTROS_STATUS = [
+  { value: FILTRO_PENDENTES, label: 'Pendentes' },
+  { value: FILTRO_TODOS, label: 'Todos' },
+  { value: FILTRO_ATENDIDOS, label: 'Atendidos' },
+  { value: FILTRO_AUSENTES, label: 'Ausentes' },
+]
+const MENSAGEM_SEM_AGENDAMENTOS = {
+  [FILTRO_PENDENTES]: 'Nenhum agendamento pendente.',
+  [FILTRO_TODOS]: 'Nenhum agendamento cadastrado.',
+  [FILTRO_ATENDIDOS]: 'Nenhum agendamento atendido.',
+  [FILTRO_AUSENTES]: 'Nenhum agendamento ausente.'
+}
 
 function ordenarHorarios(horarios) {
   return [...horarios].sort((a, b) => HORARIOS_EXPANDIDOS.indexOf(a) - HORARIOS_EXPANDIDOS.indexOf(b))
+}
+
+function normalizarStatus(status) {
+  const statusNormalizado = String(status || '').toUpperCase()
+
+  if (statusNormalizado === STATUS_CONFIRMADO) return STATUS_PENDENTE
+
+  return statusNormalizado
+}
+
+function ordenarAgendamentos(agendamentos) {
+  return [...agendamentos].sort((a, b) => {
+    const dataA = new Date(`${String(a.data || '').split('T')[0]}T${a.horario || '00:00'}:00`)
+    const dataB = new Date(`${String(b.data || '').split('T')[0]}T${b.horario || '00:00'}:00`)
+    return dataA - dataB
+  })
 }
 
 function formatarDataAgendamento(data) {
@@ -44,6 +79,10 @@ function formatarDataAgendamento(data) {
   return `${dia}-${mes}-${ano}`
 }
 
+function obterMensagemSemAgendamentos(filtroStatus) {
+  return MENSAGEM_SEM_AGENDAMENTOS[filtroStatus] || 'Nenhum agendamento encontrado.'
+}
+
 export default function PainelPage() {
   const [tab, setTab]           = useState('agendamentos')
   const [agendamentos, setAg]   = useState([])
@@ -54,13 +93,22 @@ export default function PainelPage() {
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
   const [bulkSaving, setBulkSaving] = useState(false)
+  const [filtroStatus, setFiltroStatus] = useState(FILTRO_PENDENTES)
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const [acaoAgendamentoId, setAcaoAgendamentoId] = useState(null)
   const [horariosExpandidos, setHorariosExpandidos] = useState(() => localStorage.getItem(CHAVE_VISUALIZACAO_HORARIOS) === 'true')
   const dragStateRef            = useRef({ active: false, day: null, shouldSelect: true, visited: new Set() })
   const email                   = localStorage.getItem('email')
 
   async function carregarAg() {
     setLoading(true)
-    try { setAg(await getAgendamentos()) }
+    try {
+      const data = await getAgendamentos(filtroStatus)
+      setAg(ordenarAgendamentos(data).map(agendamento => ({
+        ...agendamento,
+        status: normalizarStatus(agendamento.status)
+      })))
+    }
     catch { toast.error('Erro ao carregar agendamentos') }
     finally { setLoading(false) }
   }
@@ -81,11 +129,26 @@ export default function PainelPage() {
 
   async function cancelar(id) {
     if (!confirm('Cancelar este agendamento?')) return
+    setAcaoAgendamentoId(id)
     try {
       await deletarAgendamento(id)
-      setAg(prev => prev.filter(a => a._id !== id))
+      await carregarAg()
       toast.success('Cancelado!')
     } catch { toast.error('Erro ao cancelar') }
+    finally { setAcaoAgendamentoId(null) }
+  }
+
+  async function atualizarStatusAgendamento(id, status) {
+    setAcaoAgendamentoId(id)
+    try {
+      await atualizarAgendamento(id, { status })
+      await carregarAg()
+      toast.success(`Status atualizado para ${status}`)
+    } catch {
+      toast.error('Erro ao atualizar status')
+    } finally {
+      setAcaoAgendamentoId(null)
+    }
   }
 
   function toggleHorario(dia, h) {
@@ -218,12 +281,13 @@ export default function PainelPage() {
     } catch { toast.error('Erro ao remover') }
   }
 
-  useEffect(() => { carregarAg() }, [])
+  useEffect(() => { if (tab === 'agendamentos') carregarAg() }, [tab, filtroStatus])
   useEffect(() => { if (tab === 'horarios') carregarHorarios() }, [tab])
   useEffect(() => { if (tab === 'servicos') carregarServicos() }, [tab])
   useEffect(() => {
     localStorage.setItem(CHAVE_VISUALIZACAO_HORARIOS, String(horariosExpandidos))
   }, [horariosExpandidos])
+  useEffect(() => { setPaginaAtual(1) }, [filtroStatus])
   useEffect(() => {
     function finalizarArraste() {
       dragStateRef.current = { active: false, day: null, shouldSelect: true, visited: new Set() }
@@ -257,6 +321,11 @@ export default function PainelPage() {
     overflowWrap: 'anywhere',
     wordBreak: 'break-word'
   }
+  const totalPaginasAgendamentos = Math.max(1, Math.ceil(agendamentos.length / AGENDAMENTOS_POR_PAGINA))
+  const paginaAjustada = Math.min(paginaAtual, totalPaginasAgendamentos)
+  const inicioPagina = (paginaAjustada - 1) * AGENDAMENTOS_POR_PAGINA
+  const agendamentosPaginados = agendamentos.slice(inicioPagina, inicioPagina + AGENDAMENTOS_POR_PAGINA)
+  const existemAgendamentos = agendamentos.length > 0
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem' }}>
@@ -275,11 +344,40 @@ export default function PainelPage() {
       {/* AGENDAMENTOS */}
       {tab === 'agendamentos' && (
         <div style={card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Status exibido</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {FILTROS_STATUS.map(filtro => (
+                  <button
+                    key={filtro.value}
+                    type="button"
+                    onClick={() => setFiltroStatus(filtro.value)}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      borderRadius: 999,
+                      cursor: 'pointer',
+                      border: '1px solid var(--border)',
+                      background: filtroStatus === filtro.value ? 'var(--gold)' : 'var(--bg-surface)',
+                      color: filtroStatus === filtro.value ? 'var(--text-inverse)' : 'var(--text-secondary)'
+                    }}
+                  >
+                    {filtro.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)' }}>
+              {agendamentos.length} agendamento(s)
+            </p>
+          </div>
           {loading
             ? <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Carregando...</p>
-            : agendamentos.length === 0
-            ? <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Nenhum agendamento ainda</p>
-            : agendamentos.map(a => (
+            : !existemAgendamentos
+            ? <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>{obterMensagemSemAgendamentos(filtroStatus)}</p>
+            : agendamentosPaginados.map(a => (
               <div key={a._id} style={{ ...appointmentGrid, padding: '14px 0', borderBottom: '1px solid var(--border)' }}>
                 <div style={appointmentCell}>
                   <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{a.nome}</p>
@@ -294,19 +392,66 @@ export default function PainelPage() {
                   <p style={{ fontSize: 15, color: 'var(--gold-strong)', fontWeight: 700 }}>{a.horario}</p>
                 </div>
                 <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, background: 'var(--success-bg)', color: 'var(--success-text)', border: '1px solid var(--success-border)', padding: '4px 10px', borderRadius: 999, textAlign: 'center' }}>
-                    {a.status}
+                  <span style={{ fontSize: 13, fontWeight: 700, background: normalizarStatus(a.status) === STATUS_PENDENTE ? 'var(--success-bg)' : 'var(--bg-surface)', color: normalizarStatus(a.status) === STATUS_PENDENTE ? 'var(--success-text)' : 'var(--text-secondary)', border: normalizarStatus(a.status) === STATUS_PENDENTE ? '1px solid var(--success-border)' : '1px solid var(--border)', padding: '4px 10px', borderRadius: 999, textAlign: 'center' }}>
+                    {normalizarStatus(a.status)}
                   </span>
                 </div>
                 <div style={{ ...appointmentCell, display: 'flex', justifyContent: 'center' }}>
-                  <button onClick={() => cancelar(a._id)}
-                    style={{ padding: '8px 14px', fontSize: 14, fontWeight: 600, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: 'pointer', whiteSpace: 'normal' }}>
-                    Cancelar
-                  </button>
+                  <div style={{ display: 'grid', gap: 8, width: '100%', maxWidth: 140 }}>
+                    <button
+                      type="button"
+                      disabled={acaoAgendamentoId === a._id}
+                      onClick={() => atualizarStatusAgendamento(a._id, 'ATENDIDO')}
+                      style={{ padding: '8px 14px', fontSize: 14, fontWeight: 700, border: '1px solid var(--border)', background: 'var(--gold)', color: 'var(--text-inverse)', borderRadius: 6, cursor: acaoAgendamentoId === a._id ? 'wait' : 'pointer', opacity: acaoAgendamentoId === a._id ? 0.6 : 1 }}
+                    >
+                      Atendido
+                    </button>
+                    <button
+                      type="button"
+                      disabled={acaoAgendamentoId === a._id}
+                      onClick={() => atualizarStatusAgendamento(a._id, 'AUSENTE')}
+                      style={{ padding: '8px 14px', fontSize: 14, fontWeight: 700, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', borderRadius: 6, cursor: acaoAgendamentoId === a._id ? 'wait' : 'pointer', opacity: acaoAgendamentoId === a._id ? 0.6 : 1 }}
+                    >
+                      Ausente
+                    </button>
+                    <button
+                      type="button"
+                      disabled={acaoAgendamentoId === a._id}
+                      onClick={() => cancelar(a._id)}
+                      style={{ padding: '8px 14px', fontSize: 14, fontWeight: 600, border: '1px solid var(--danger-border)', background: 'none', color: 'var(--danger)', borderRadius: 6, cursor: acaoAgendamentoId === a._id ? 'wait' : 'pointer', whiteSpace: 'normal', opacity: acaoAgendamentoId === a._id ? 0.6 : 1 }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
           }
+          {!loading && existemAgendamentos && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', paddingTop: '1.25rem' }}>
+              <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                Página {paginaAjustada} de {totalPaginasAgendamentos}
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  disabled={paginaAjustada === 1}
+                  onClick={() => setPaginaAtual(prev => Math.max(1, prev - 1))}
+                  style={{ padding: '8px 12px', fontSize: 14, fontWeight: 700, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', borderRadius: 6, cursor: paginaAjustada === 1 ? 'not-allowed' : 'pointer', opacity: paginaAjustada === 1 ? 0.5 : 1 }}
+                >
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  disabled={paginaAjustada === totalPaginasAgendamentos}
+                  onClick={() => setPaginaAtual(prev => Math.min(totalPaginasAgendamentos, prev + 1))}
+                  style={{ padding: '8px 12px', fontSize: 14, fontWeight: 700, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', borderRadius: 6, cursor: paginaAjustada === totalPaginasAgendamentos ? 'not-allowed' : 'pointer', opacity: paginaAjustada === totalPaginasAgendamentos ? 0.5 : 1 }}
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

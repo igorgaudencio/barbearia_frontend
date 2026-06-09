@@ -17,11 +17,30 @@ export const login = (email, password) =>
 export const cadastrar = (email, password, password_confirmation) =>
   api.post('/auth/cadastro', { email, password, password_confirmation }).then(r => r.data)
 
-export const getAgendamentos = () =>
-  api.get('/agendamentos').then(r => r.data)
+export const getAgendamentos = async (status = 'TODOS') => {
+  const statusNormalizado = String(status || 'TODOS').toUpperCase()
+
+  try {
+    const response = await api.get(`/agendamentos/status/${statusNormalizado}`)
+    return response.data
+  } catch (error) {
+    const statusResposta = error?.response?.status
+
+    if (statusResposta !== 404 && statusResposta !== 405) throw error
+
+    const response = await api.get('/agendamentos', {
+      params: { status: statusNormalizado }
+    })
+
+    return response.data
+  }
+}
 
 export const criarAgendamento = (payload) =>
   api.post('/agendamentos', { agendamento: payload }).then(r => r.data)
+
+export const atualizarAgendamento = (id, payload) =>
+  api.patch(`/agendamentos/${id}`, { agendamento: payload }).then(r => r.data)
 
 export const deletarAgendamento = (id) =>
   api.delete(`/agendamentos/${id}`).then(r => r.data)

@@ -74,10 +74,10 @@ export default function AgendamentoPage() {
     }
     setLoading(true)
     try {
-      await criarAgendamento({ nome, email, data, horario, servico_id: servicoId })
+      await criarAgendamento({ nome, email, data, horario, servico_id: servicoId, status: 'PENDENTE' })
       setSucesso(true)
       setNome(''); setEmail(''); setData(''); setHorario(''); setServico(''); setSlots(null)
-      toast.success('Agendamento confirmado!')
+      toast.success('Agendamento enviado!')
       setTimeout(() => setSucesso(false), 4000)
     } catch (err) {
       const msg = err.response?.data?.errors?.join(', ') || 'Erro ao agendar'
@@ -110,8 +110,8 @@ export default function AgendamentoPage() {
         {sucesso ? (
           <div style={{ ...card, textAlign: 'center', padding: '2.5rem', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 48, color: 'var(--gold)', marginBottom: 12 }}>✓</div>
-            <h2 style={{ fontFamily: 'serif', fontSize: 26, fontWeight: 700, marginBottom: 8 }}>Agendado com sucesso!</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 500 }}>Confirmação enviada para <strong style={{ color: 'var(--gold-strong)' }}>{email}</strong></p>
+            <h2 style={{ fontFamily: 'serif', fontSize: 26, fontWeight: 700, marginBottom: 8 }}>Solicitação enviada!</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 500 }}>Agendamento pendente registrado para <strong style={{ color: 'var(--gold-strong)' }}>{email}</strong></p>
           </div>
         ) : (
           <form style={card} onSubmit={handleSubmit}>
