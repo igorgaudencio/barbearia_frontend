@@ -52,7 +52,7 @@ export default function PainelPage() {
   const [novoNome, setNome]     = useState('')
   const [novoPreco, setPreco]   = useState('')
   const [loading, setLoading]   = useState(true)
-  const [saving, setSaving]     = useState(null)
+  const [saving, setSaving]     = useState(false)
   const [bulkSaving, setBulkSaving] = useState(false)
   const [horariosExpandidos, setHorariosExpandidos] = useState(() => localStorage.getItem(CHAVE_VISUALIZACAO_HORARIOS) === 'true')
   const dragStateRef            = useRef({ active: false, day: null, shouldSelect: true, visited: new Set() })
@@ -148,13 +148,23 @@ export default function PainelPage() {
     })
   }
 
-  async function salvar(dia) {
-    setSaving(dia)
-    try {
-      await salvarHorarios(dia, configs[dia] || [])
+  async function salvarHorariosGlobalmente() {
+    setSaving(true)
+
+    const resultados = await Promise.allSettled(
+      DIAS.map(({ key }) => salvarHorarios(key, configs[key] || []))
+    )
+
+    const houveErro = resultados.some(resultado => resultado.status === 'rejected')
+
+    if (houveErro) {
+      toast.error('Erro ao salvar horários')
+      await carregarHorarios()
+    } else {
       toast.success('Horários salvos!')
-    } catch { toast.error('Erro ao salvar') }
-    finally { setSaving(null) }
+    }
+
+    setSaving(false)
   }
 
   async function toggleVisualizacaoHorarios() {
@@ -347,14 +357,24 @@ export default function PainelPage() {
             <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)' }}>
               Exibindo por padrão 07:00 até 18:00.
             </p>
-            <button
-              type="button"
-              onClick={toggleVisualizacaoHorarios}
-              disabled={bulkSaving}
-              style={{ padding: '10px 14px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: bulkSaving ? 'wait' : 'pointer', opacity: bulkSaving ? 0.6 : 1 }}
-            >
-              {bulkSaving ? 'Salvando grade padrão...' : horariosExpandidos ? 'Mostrar grade padrão' : 'Expandir até 05:00–22:00'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={toggleVisualizacaoHorarios}
+                disabled={saving || bulkSaving}
+                style={{ padding: '10px 14px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: saving || bulkSaving ? 'wait' : 'pointer', opacity: saving || bulkSaving ? 0.6 : 1 }}
+              >
+                {bulkSaving ? 'Salvando grade padrão...' : horariosExpandidos ? 'Mostrar grade padrão' : 'Expandir até 05:00–22:00'}
+              </button>
+              <button
+                type="button"
+                onClick={salvarHorariosGlobalmente}
+                disabled={saving || bulkSaving}
+                style={{ padding: '10px 16px', background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: saving || bulkSaving ? 'wait' : 'pointer', opacity: saving || bulkSaving ? 0.6 : 1 }}
+              >
+                {saving ? 'Salvando horários...' : bulkSaving ? 'Aguarde...' : 'Salvar horários'}
+              </button>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
             {DIAS.map(({ key, label }) => (
@@ -373,8 +393,8 @@ export default function PainelPage() {
                 <button
                   type="button"
                   onClick={() => toggleTodosHorarios(key, horariosVisiveis)}
-                  disabled={bulkSaving}
-                  style={{ width: '100%', marginBottom: '0.75rem', padding: '10px 10px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: bulkSaving ? 'wait' : 'pointer', opacity: bulkSaving ? 0.6 : 1 }}
+                  disabled={saving || bulkSaving}
+                  style={{ width: '100%', marginBottom: '0.75rem', padding: '10px 10px', background: 'none', color: 'var(--gold-strong)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: saving || bulkSaving ? 'wait' : 'pointer', opacity: saving || bulkSaving ? 0.6 : 1 }}
                 >
                   {todosSelecionados ? 'Desmarcar todos' : 'Marcar todos'}
                 </button>
@@ -385,7 +405,7 @@ export default function PainelPage() {
                       <button
                         key={h}
                         type="button"
-                        disabled={bulkSaving}
+                        disabled={saving || bulkSaving}
                         onPointerDown={event => iniciarArrasteHorario(key, h, active, event)}
                         onPointerEnter={() => continuarArrasteHorario(key, h)}
                         onKeyDown={event => {
@@ -398,10 +418,10 @@ export default function PainelPage() {
                           fontSize: 13,
                           fontWeight: 700,
                           borderRadius: 6,
-                          cursor: bulkSaving ? 'wait' : 'pointer',
+                          cursor: saving || bulkSaving ? 'wait' : 'pointer',
                           border: '1px solid var(--border)',
                           background: 'var(--bg-surface)',
-                          opacity: bulkSaving ? 0.6 : 1,
+                          opacity: saving || bulkSaving ? 0.6 : 1,
                           color: active ? 'var(--select-text)' : 'var(--text-secondary)',
                           ...(active ? selectedOption : null)
                         }}>
@@ -410,10 +430,6 @@ export default function PainelPage() {
                     )
                   })}
                 </div>
-                <button type="button" onClick={() => salvar(key)} disabled={saving === key || bulkSaving}
-                  style={{ width: '100%', padding: 11, background: 'var(--gold)', color: 'var(--text-inverse)', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 700, cursor: bulkSaving ? 'wait' : 'pointer', opacity: saving === key || bulkSaving ? 0.5 : 1 }}>
-                  {saving === key ? 'Salvando...' : bulkSaving ? 'Aguarde...' : 'Salvar'}
-                </button>
                     </>
                   )
                 })()}
