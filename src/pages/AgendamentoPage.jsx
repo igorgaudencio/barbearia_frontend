@@ -1,16 +1,34 @@
 import { useState, useEffect } from 'react'
 import { criarAgendamento, getHorariosDisponiveis, getServicos } from '../services/api'
 import toast from 'react-hot-toast'
+import { barbershopConfig } from '../config/barbershop'
 
-function dataInputLocal(date) {
-  const ano = date.getFullYear()
-  const mes = String(date.getMonth() + 1).padStart(2, '0')
-  const dia = String(date.getDate()).padStart(2, '0')
+function getLocalDateInputValue() {
+  const now = new Date()
+  const timezoneOffset = now.getTimezoneOffset() * 60 * 1000
+  return new Date(now.getTime() - timezoneOffset).toISOString().split('T')[0]
+}
 
-  return `${ano}-${mes}-${dia}`
+function createLocalDateTime(dateValue, timeValue) {
+  const [year, month, day] = dateValue.split('-').map(Number)
+  const [hours, minutes] = timeValue.split(':').map(Number)
+  return new Date(year, month - 1, day, hours, minutes, 0, 0)
+}
+
+function isFutureSlot(dateValue, timeValue) {
+  if (!dateValue || !timeValue) return false
+  return createLocalDateTime(dateValue, timeValue) > new Date()
+}
+
+function formatDisplayDate(dateValue) {
+  if (!dateValue) return ''
+  const [year, month, day] = dateValue.split('-')
+  if (!year || !month || !day) return dateValue
+  return `${day}/${month}/${year}`
 }
 
 export default function AgendamentoPage() {
+  const { slogan } = barbershopConfig
   const [nome, setNome]           = useState('')
   const [email, setEmail]         = useState('')
   const [data, setData]           = useState('')
@@ -23,7 +41,7 @@ export default function AgendamentoPage() {
   const [loading, setLoading]     = useState(false)
   const [sucesso, setSucesso]     = useState(false)
 
-  const hoje = dataInputLocal(new Date())
+  const hoje = getLocalDateInputValue()
 
   useEffect(() => {
     getServicos()
@@ -52,6 +70,11 @@ export default function AgendamentoPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!isFutureSlot(data, horario)) {
+      toast.error('Selecione um horário que ainda não tenha passado')
+      setHorario('')
+      return
+    }
     setLoading(true)
     try {
       await criarAgendamento({ nome, email, data, horario, servico_id: servicoId })
@@ -68,9 +91,7 @@ export default function AgendamentoPage() {
   }
 
   const servicoSelecionado = servicos.find(s => s._id === servicoId)
-  const descontoPromocional = Number(promocao?.desconto || 0)
-  const temPromocao = descontoPromocional > 0
-  const precoComDesconto = (preco) => Number(preco) * (1 - descontoPromocional / 100)
+  const horariosDisponiveis = slots?.disponiveis?.filter(h => isFutureSlot(data, h)) ?? []
   const input = { width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', outline: 'none' }
   const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
   const card  = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '2rem' }
@@ -79,12 +100,15 @@ export default function AgendamentoPage() {
     background: 'var(--select-bg)',
     boxShadow: 'var(--select-shadow)'
   }
+  const descontoPromocional = Number(promocao?.desconto || 0)
+  const temPromocao = Boolean(promocao?.ativo && descontoPromocional > 0)
+  const precoComDesconto = (preco) => Number(preco || 0) * (1 - descontoPromocional / 100)
 
   return (
     <div>
       <div style={{ background: 'var(--bg-hero)', borderBottom: '1px solid var(--border-soft)', textAlign: 'center', padding: '3rem 2rem' }}>
         <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--gold-strong)', textTransform: 'uppercase', marginBottom: 12 }}>Agende seu horário</p>
-        <h1 style={{ fontFamily: 'serif', fontSize: 42, fontWeight: 700, marginBottom: 10 }}>Seu estilo, na hora certa</h1>
+        <h1 style={{ fontFamily: 'serif', fontSize: 42, fontWeight: 700, marginBottom: 10 }}>{slogan}</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 18, fontWeight: 500 }}>Escolha o serviço, dia e horário disponível</p>
       </div>
 
@@ -177,12 +201,12 @@ export default function AgendamentoPage() {
                   ))}
                 </div>
               )}
-              {slots && !loadingSlots && slots.disponiveis?.length === 0 && (
+              {slots && !loadingSlots && horariosDisponiveis.length === 0 && (
                 <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', padding: '10px 0' }}>Nenhum horário disponível neste dia</p>
               )}
-              {slots && !loadingSlots && slots.disponiveis?.length > 0 && (
+              {slots && !loadingSlots && horariosDisponiveis.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                  {slots.disponiveis.map(h => (
+                  {horariosDisponiveis.map(h => (
                     <button key={h} type="button" onClick={() => setHorario(h)}
                       style={{
                         padding: '10px 4px',
@@ -228,7 +252,7 @@ export default function AgendamentoPage() {
                 {data && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '4px 0' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Data</span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{data}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{formatDisplayDate(data)}</span>
                   </div>
                 )}
                 {horario && (

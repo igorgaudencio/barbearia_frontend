@@ -5,6 +5,7 @@ import AgendamentoPage from './pages/AgendamentoPage'
 import BarbeiroPage from './pages/BarbeiroPage'
 import PainelPage from './pages/PainelPage'
 import Layout from './components/Layout'
+import { barbershopConfig } from './config/barbershop'
 
 function RotaProtegida({ children }) {
   const token = localStorage.getItem('token')
@@ -23,6 +24,10 @@ export default function App() {
     document.documentElement.dataset.theme = theme
     localStorage.setItem('theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    document.title = barbershopConfig.name
+  }, [])
 
   function toggleTheme() {
     setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')
