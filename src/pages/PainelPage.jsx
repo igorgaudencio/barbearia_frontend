@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getAgendamentos, deletarAgendamento, getHorarios, salvarHorarios, getServicos, criarServico, deletarServico } from '../services/api'
 import toast from 'react-hot-toast'
 
@@ -39,11 +39,8 @@ export default function PainelPage() {
   const [novoPreco, setPreco]   = useState('')
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(null)
+  const dragStateRef            = useRef({ active: false, day: null, shouldSelect: true, visited: new Set() })
   const email                   = localStorage.getItem('email')
-
-  useEffect(() => { carregarAg() }, [])
-  useEffect(() => { if (tab === 'horarios') carregarHorarios() }, [tab])
-  useEffect(() => { if (tab === 'servicos') carregarServicos() }, [tab])
 
   async function carregarAg() {
     setLoading(true)
@@ -80,6 +77,42 @@ export default function PainelPage() {
       const atual = prev[dia] || []
       return { ...prev, [dia]: atual.includes(h) ? atual.filter(x => x !== h) : [...atual, h].sort() }
     })
+  }
+
+  function setHorarioSelecionado(dia, horario, selecionado) {
+    setConfigs(prev => {
+      const atual = prev[dia] || []
+      const jaSelecionado = atual.includes(horario)
+
+      if (selecionado === jaSelecionado) return prev
+
+      return {
+        ...prev,
+        [dia]: selecionado ? [...atual, horario].sort() : atual.filter(h => h !== horario)
+      }
+    })
+  }
+
+  function iniciarArrasteHorario(dia, horario, ativo, event) {
+    if (event.button !== 0) return
+
+    const visited = new Set([`${dia}:${horario}`])
+    const shouldSelect = !ativo
+
+    dragStateRef.current = { active: true, day: dia, shouldSelect, visited }
+    setHorarioSelecionado(dia, horario, shouldSelect)
+  }
+
+  function continuarArrasteHorario(dia, horario) {
+    const dragState = dragStateRef.current
+
+    if (!dragState.active || dragState.day !== dia) return
+
+    const slotId = `${dia}:${horario}`
+    if (dragState.visited.has(slotId)) return
+
+    dragState.visited.add(slotId)
+    setHorarioSelecionado(dia, horario, dragState.shouldSelect)
   }
 
   function toggleTodosHorarios(dia) {
@@ -121,6 +154,23 @@ export default function PainelPage() {
       toast.success('Serviço removido!')
     } catch { toast.error('Erro ao remover') }
   }
+
+  useEffect(() => { carregarAg() }, [])
+  useEffect(() => { if (tab === 'horarios') carregarHorarios() }, [tab])
+  useEffect(() => { if (tab === 'servicos') carregarServicos() }, [tab])
+  useEffect(() => {
+    function finalizarArraste() {
+      dragStateRef.current = { active: false, day: null, shouldSelect: true, visited: new Set() }
+    }
+
+    window.addEventListener('pointerup', finalizarArraste)
+    window.addEventListener('pointercancel', finalizarArraste)
+
+    return () => {
+      window.removeEventListener('pointerup', finalizarArraste)
+      window.removeEventListener('pointercancel', finalizarArraste)
+    }
+  }, [])
 
   const card     = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.5rem' }
   const input    = { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '11px 12px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', outline: 'none' }
@@ -235,7 +285,8 @@ export default function PainelPage() {
       {/* HORÁRIOS */}
       {tab === 'horarios' && (
         <div>
-          <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Selecione os horários que você atende em cada dia</p>
+          <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Selecione os horários que você atende em cada dia</p>
+          <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Clique e arraste sobre os horários para marcar ou desmarcar vários de uma vez.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
             {DIAS.map(({ key, label }) => (
               <div key={key} style={card}>
@@ -256,11 +307,20 @@ export default function PainelPage() {
                 >
                   {todosSelecionados ? 'Desmarcar todos' : 'Marcar todos'}
                 </button>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: '1rem', userSelect: 'none' }}>
                   {TODOS_HORARIOS.map(h => {
                     const active = horariosSelecionados.includes(h)
                     return (
-                      <button key={h} type="button" onClick={() => toggleHorario(key, h)}
+                      <button
+                        key={h}
+                        type="button"
+                        onPointerDown={event => iniciarArrasteHorario(key, h, active, event)}
+                        onPointerEnter={() => continuarArrasteHorario(key, h)}
+                        onKeyDown={event => {
+                          if (event.key !== 'Enter' && event.key !== ' ') return
+                          event.preventDefault()
+                          toggleHorario(key, h)
+                        }}
                         style={{
                           padding: '8px 4px',
                           fontSize: 13,
