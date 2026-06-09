@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { criarAgendamento, getHorariosDisponiveis, getServicos } from '../services/api'
 import toast from 'react-hot-toast'
+import { barbershopConfig } from '../config/barbershop'
 
 function getLocalDateInputValue() {
   const now = new Date()
@@ -20,6 +21,7 @@ function isFutureSlot(dateValue, timeValue) {
 }
 
 export default function AgendamentoPage() {
+  const { slogan } = barbershopConfig
   const [nome, setNome]           = useState('')
   const [email, setEmail]         = useState('')
   const [data, setData]           = useState('')
@@ -93,7 +95,7 @@ export default function AgendamentoPage() {
     <div>
       <div style={{ background: 'var(--bg-hero)', borderBottom: '1px solid var(--border-soft)', textAlign: 'center', padding: '3rem 2rem' }}>
         <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--gold-strong)', textTransform: 'uppercase', marginBottom: 12 }}>Agende seu horário</p>
-        <h1 style={{ fontFamily: 'serif', fontSize: 42, fontWeight: 700, marginBottom: 10 }}>Seu estilo, na hora certa</h1>
+        <h1 style={{ fontFamily: 'serif', fontSize: 42, fontWeight: 700, marginBottom: 10 }}>{slogan}</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 18, fontWeight: 500 }}>Escolha o serviço, dia e horário disponível</p>
       </div>
 

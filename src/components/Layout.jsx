@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { barbershopConfig } from '../config/barbershop'
 
 const linkStyle = (active) => ({
   padding: '8px 18px', fontSize: 15, fontWeight: 600, borderRadius: 8, textDecoration: 'none',
@@ -10,6 +11,7 @@ const linkStyle = (active) => ({
 export default function Layout({ theme, toggleTheme }) {
   const navigate = useNavigate()
   const token = localStorage.getItem('token')
+  const { name, establishedLabel, address, phone } = barbershopConfig
 
   function logout() {
     localStorage.removeItem('token')
@@ -23,8 +25,8 @@ export default function Layout({ theme, toggleTheme }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ color: 'var(--gold)', fontSize: 22 }}>✂</span>
           <div>
-            <div style={{ fontFamily: 'serif', fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>Barbearia Coquilho</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Est. 2026</div>
+            <div style={{ fontFamily: 'serif', fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>{name}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>{establishedLabel}</div>
           </div>
         </div>
 
@@ -64,7 +66,7 @@ export default function Layout({ theme, toggleTheme }) {
       </main>
 
       <footer style={{ background: 'var(--bg-hero)', borderTop: '1px solid var(--border-soft)', textAlign: 'center', padding: '1.25rem', fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}>
-        <span style={{ color: 'var(--gold-strong)' }}>Barbearia Coquilho</span> · Rua dos Caminhões, 67 · (84) 98747-9792
+        <span style={{ color: 'var(--gold-strong)' }}>{name}</span> · {address} · {phone}
       </footer>
     </div>
   )
