@@ -60,6 +60,11 @@ export default function AgendamentoPage() {
   const input = { width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', outline: 'none' }
   const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }
   const card  = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '2rem' }
+  const selectedOption = {
+    border: '1px solid var(--select-border)',
+    background: 'var(--select-bg)',
+    boxShadow: 'var(--select-shadow)'
+  }
 
   return (
     <div>
@@ -90,9 +95,19 @@ export default function AgendamentoPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {servicos.map(s => (
                     <button key={s._id} type="button" onClick={() => setServico(s._id)}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (servicoId === s._id ? 'var(--gold)' : 'var(--border)'), background: servicoId === s._id ? 'var(--bg-accent-soft)' : 'var(--bg-surface)' }}>
-                      <span style={{ fontSize: 16, fontWeight: 600, color: servicoId === s._id ? 'var(--gold-strong)' : 'var(--text-primary)' }}>{s.nome}</span>
-                      <span style={{ fontSize: 16, color: 'var(--gold-strong)', fontWeight: 700 }}>
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '14px 16px',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        border: '1px solid var(--border)',
+                        background: 'var(--bg-surface)',
+                        ...(servicoId === s._id ? selectedOption : null)
+                      }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: servicoId === s._id ? 'var(--select-text)' : 'var(--text-primary)' }}>{s.nome}</span>
+                      <span style={{ fontSize: 16, color: servicoId === s._id ? 'var(--select-text)' : 'var(--gold-strong)', fontWeight: 700 }}>
                         R$ {Number(s.preco).toFixed(2)}
                       </span>
                     </button>
@@ -136,7 +151,17 @@ export default function AgendamentoPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   {slots.disponiveis.map(h => (
                     <button key={h} type="button" onClick={() => setHorario(h)}
-                      style={{ padding: '10px 4px', fontSize: 15, fontWeight: 600, borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (horario === h ? 'var(--gold)' : 'var(--border)'), background: horario === h ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: horario === h ? 'var(--gold-strong)' : 'var(--text-secondary)' }}>
+                      style={{
+                        padding: '10px 4px',
+                        fontSize: 15,
+                        fontWeight: 700,
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        border: '1px solid var(--border)',
+                        background: 'var(--bg-surface)',
+                        color: horario === h ? 'var(--select-text)' : 'var(--text-secondary)',
+                        ...(horario === h ? selectedOption : null)
+                      }}>
                       {h}
                     </button>
                   ))}

@@ -125,6 +125,11 @@ export default function PainelPage() {
   const card     = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.5rem' }
   const input    = { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '11px 12px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', outline: 'none' }
   const tabStyle = (active) => ({ padding: '9px 18px', fontSize: 15, border: 'none', borderRadius: 6, cursor: 'pointer', background: active ? 'var(--gold)' : 'none', color: active ? 'var(--text-inverse)' : 'var(--text-secondary)', fontWeight: active ? 700 : 600 })
+  const selectedOption = {
+    border: '1px solid var(--select-border)',
+    background: 'var(--select-bg)',
+    boxShadow: 'var(--select-shadow)'
+  }
   const appointmentGrid = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
@@ -256,7 +261,17 @@ export default function PainelPage() {
                     const active = horariosSelecionados.includes(h)
                     return (
                       <button key={h} type="button" onClick={() => toggleHorario(key, h)}
-                        style={{ padding: '8px 4px', fontSize: 13, fontWeight: 600, borderRadius: 6, cursor: 'pointer', border: '1px solid ' + (active ? 'var(--gold)' : 'var(--border)'), background: active ? 'var(--bg-accent-soft)' : 'var(--bg-surface)', color: active ? 'var(--gold-strong)' : 'var(--text-secondary)' }}>
+                        style={{
+                          padding: '8px 4px',
+                          fontSize: 13,
+                          fontWeight: 700,
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          border: '1px solid var(--border)',
+                          background: 'var(--bg-surface)',
+                          color: active ? 'var(--select-text)' : 'var(--text-secondary)',
+                          ...(active ? selectedOption : null)
+                        }}>
                         {h}
                       </button>
                     )

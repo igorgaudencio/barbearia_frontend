@@ -22,6 +22,10 @@
   --success-bg: #162116;
   --success-text: #5a9e5a;
   --success-border: #2a4a2a;
+  --select-bg: linear-gradient(135deg, #2b210d 0%, #1a1508 100%);
+  --select-border: #d4a853;
+  --select-text: #f3dba4;
+  --select-shadow: 0 10px 24px rgba(212, 168, 83, 0.16);
   --radius: 8px;
   --radius-lg: 14px;
   color-scheme: dark;
@@ -48,6 +52,10 @@
   --success-bg: #edf7ee;
   --success-text: #2f7a42;
   --success-border: #bdd9c4;
+  --select-bg: linear-gradient(135deg, #ffe39a 0%, #f4c451 100%);
+  --select-border: #e0aa22;
+  --select-text: #5c3b00;
+  --select-shadow: 0 14px 26px rgba(224, 170, 34, 0.22);
   color-scheme: light;
 }
 
