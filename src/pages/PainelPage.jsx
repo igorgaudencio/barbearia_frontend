@@ -26,6 +26,7 @@ function criarHorarios(horaInicial, horaFinal) {
 
 const HORARIOS_PADRAO = criarHorarios(7, 18)
 const HORARIOS_EXPANDIDOS = criarHorarios(5, 22)
+const CHAVE_VISUALIZACAO_HORARIOS = 'painel_horarios_expandidos'
 
 function ordenarHorarios(horarios) {
   return [...horarios].sort((a, b) => HORARIOS_EXPANDIDOS.indexOf(a) - HORARIOS_EXPANDIDOS.indexOf(b))
@@ -53,7 +54,7 @@ export default function PainelPage() {
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(null)
   const [bulkSaving, setBulkSaving] = useState(false)
-  const [horariosExpandidos, setHorariosExpandidos] = useState(false)
+  const [horariosExpandidos, setHorariosExpandidos] = useState(() => localStorage.getItem(CHAVE_VISUALIZACAO_HORARIOS) === 'true')
   const dragStateRef            = useRef({ active: false, day: null, shouldSelect: true, visited: new Set() })
   const email                   = localStorage.getItem('email')
 
@@ -210,6 +211,9 @@ export default function PainelPage() {
   useEffect(() => { carregarAg() }, [])
   useEffect(() => { if (tab === 'horarios') carregarHorarios() }, [tab])
   useEffect(() => { if (tab === 'servicos') carregarServicos() }, [tab])
+  useEffect(() => {
+    localStorage.setItem(CHAVE_VISUALIZACAO_HORARIOS, String(horariosExpandidos))
+  }, [horariosExpandidos])
   useEffect(() => {
     function finalizarArraste() {
       dragStateRef.current = { active: false, day: null, shouldSelect: true, visited: new Set() }
